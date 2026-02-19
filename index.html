@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>corewatcher</title>
-  <meta name="theme-color" content="#0b0b10" />
+  <meta name="theme-color" content="#07070c" />
+  <meta name="description" content="corewatcher portal — private homelab access via Tailscale + live server heartbeat." />
   <style>
     :root{
       --bg:#07070c;
@@ -242,11 +243,11 @@
       padding: 12px 14px;
       border-radius: 16px;
       text-decoration:none;
-      font-weight: 750;
+      font-weight: 760;
       letter-spacing:.2px;
       color: var(--text);
       border: 1px solid rgba(255,255,255,.16);
-      background: linear-gradient(135deg, rgba(255,45,85,.28), rgba(139,92,246,.14));
+      background: linear-gradient(135deg, rgba(255,45,85,.30), rgba(139,92,246,.16));
       box-shadow: 0 14px 38px rgba(255,45,85,.12);
       transition: transform .09s ease, filter .2s ease, background .2s ease;
     }
@@ -255,8 +256,13 @@
     .btn.secondary{
       background: rgba(255,255,255,.04);
       box-shadow: none;
-      font-weight: 650;
+      font-weight: 680;
       color: rgba(242,242,251,.92);
+    }
+    .btn.disabled{
+      opacity:.55;
+      pointer-events:none;
+      filter: grayscale(.2);
     }
 
     .steps{
@@ -296,7 +302,6 @@
     }
     .badgeDot{ width:8px; height:8px; border-radius:50%; background: var(--warn); }
 
-    /* Footer micro */
     .footer{
       margin-top: 14px;
       display:flex;
@@ -312,6 +317,77 @@
       border-bottom: 1px dashed rgba(242,242,251,.25);
     }
     .link:hover{ color: rgba(242,242,251,.92); border-bottom-color: rgba(242,242,251,.45); }
+
+    /* Bottom decoration */
+    .decor{
+      margin-top: 18px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      box-shadow: 0 14px 40px rgba(0,0,0,.25);
+      overflow:hidden;
+      position:relative;
+    }
+    .decor::before{
+      content:"";
+      position:absolute; inset:-30%;
+      background: conic-gradient(from 180deg,
+        rgba(255,45,85,.0),
+        rgba(255,45,85,.18),
+        rgba(139,92,246,.14),
+        rgba(34,211,238,.12),
+        rgba(255,45,85,.0)
+      );
+      animation: spin 14s linear infinite;
+      opacity:.55;
+    }
+    .decorInner{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      z-index:1;
+    }
+    .sig{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .sigTitle{
+      font-weight: 800;
+      letter-spacing:.3px;
+      font-size: 13px;
+      opacity:.92;
+    }
+    .sigSub{
+      font-size: 12px;
+      color: rgba(242,242,251,.66);
+      line-height:1.35;
+    }
+    .sparkline{
+      width: 220px;
+      max-width: 42vw;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      overflow:hidden;
+      position:relative;
+    }
+    .sparkline svg{
+      width:100%; height:100%;
+      display:block;
+      opacity:.95;
+    }
+    .sparkGlow{
+      position:absolute; inset:0;
+      background: radial-gradient(120px 60px at 20% 50%, rgba(56,242,155,.18), transparent 65%);
+      opacity:.0;
+      transition: opacity .25s ease;
+      pointer-events:none;
+    }
   </style>
 </head>
 
@@ -326,11 +402,11 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>corewatcher</h1>
-          <div class="subtitle">Private homelab access via Tailscale</div>
+          <div class="subtitle">Private homelab portal · Tailnet access</div>
         </div>
       </div>
 
-      <div class="pill" id="healthPill" title="This is updated by the server. If it stops updating, assume it's down.">
+      <div class="pill" id="healthPill" title="Updated by the server. If updates stop, assume it's down.">
         <span class="dot" id="healthDot"></span>
         <span class="pillText" id="healthText">Checking server…</span>
       </div>
@@ -338,16 +414,20 @@
 
     <div class="grid">
       <section class="card">
-        <h2>Get access</h2>
+        <h2>Access</h2>
         <p class="muted">
-          If you can’t reach the services provided,
-          you’re probably not connected to Tailscale.
+          This homelab is private. You need Tailscale to reach internal services.
         </p>
 
         <div class="btnRow">
           <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">
-            Open Tailscale Login →
+            Connect via Tailscale →
           </a>
+
+          <a class="btn secondary" id="homeBtn" href="https://home.corewatcher.com" target="_blank" rel="noopener">
+            Open Control Center (Homarr)
+          </a>
+
           <a class="btn secondary" href="https://tailscale.com/download" target="_blank" rel="noopener">
             Download Tailscale
           </a>
@@ -364,11 +444,11 @@
           <li>Install Tailscale on your device.</li>
           <li>Sign in on <span class="kbd">login.tailscale.com</span>.</li>
           <li>Turn Tailscale “On”.</li>
-          <li>Open your desired services.</li>
+          <li>Open <span class="kbd">home.corewatcher.com</span> to confirm access.</li>
         </ol>
 
         <div class="small">
-          Mobile tip: if you swapped Wi-Fi / mobile data, toggle Tailscale off/on once.
+          The Control Center is reachable only when connected to the Tailnet.
         </div>
       </section>
 
@@ -394,6 +474,27 @@
         </div>
       </section>
     </div>
+
+    <!-- Bottom decoration -->
+    <section class="decor" aria-hidden="true">
+      <div class="decorInner">
+        <div class="sig">
+          <div class="sigTitle">corewatcher signal</div>
+          <div class="sigSub">a tiny heartbeat from the void — updated every few minutes.</div>
+        </div>
+
+        <div class="sparkline">
+          <div class="sparkGlow" id="sparkGlow"></div>
+          <!-- cute little waveform (static, but we change glow based on status) -->
+          <svg viewBox="0 0 220 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 26 C18 26 18 10 36 10 C54 10 54 34 72 34 C90 34 90 16 108 16 C126 16 126 30 144 30 C162 30 162 8 180 8 C198 8 198 26 220 26"
+              stroke="rgba(242,242,251,.70)" stroke-width="2.2" />
+            <path d="M0 26 C18 26 18 10 36 10 C54 10 54 34 72 34 C90 34 90 16 108 16 C126 16 126 30 144 30 C162 30 162 8 180 8 C198 8 198 26 220 26"
+              stroke="rgba(255,45,85,.55)" stroke-width="1.2" />
+          </svg>
+        </div>
+      </div>
+    </section>
   </div>
 
 <script>
@@ -406,6 +507,9 @@
     const dot = el("healthDot");
     const badgeDot = el("badgeDot");
     const pill = el("healthPill");
+    const sparkGlow = el("sparkGlow");
+    const homeBtn = el("homeBtn");
+
     el("healthText").textContent = text;
 
     dot.classList.remove("pulse-good","pulse-bad");
@@ -415,15 +519,22 @@
       badgeDot.style.background = "var(--good)";
       pill.style.borderColor = "rgba(56,242,155,.35)";
       dot.classList.add("pulse-good");
+      if (sparkGlow) sparkGlow.style.opacity = "1";
+      if (homeBtn) homeBtn.classList.remove("disabled");
     } else if(state === "down"){
       dot.style.background = "var(--bad)";
       badgeDot.style.background = "var(--bad)";
       pill.style.borderColor = "rgba(255,77,109,.35)";
       dot.classList.add("pulse-bad");
+      if (sparkGlow) sparkGlow.style.opacity = ".10";
+      // purely UX: disable the button when server is down (still viewable in source, ofc)
+      if (homeBtn) homeBtn.classList.add("disabled");
     } else {
       dot.style.background = "var(--warn)";
       badgeDot.style.background = "var(--warn)";
       pill.style.borderColor = "rgba(255,209,102,.35)";
+      if (sparkGlow) sparkGlow.style.opacity = ".35";
+      if (homeBtn) homeBtn.classList.remove("disabled");
     }
   }
 
@@ -464,7 +575,7 @@
 
       if(serverUp){
         setStatus("up","Server online");
-        el("hint").textContent = "If you still can’t reach services: connect Tailscale.";
+        el("hint").textContent = "If you still can’t reach the Control Center: connect Tailscale.";
       } else {
         setStatus("down","Server offline / unreachable");
         el("hint").textContent = "If you expected it to be up: check power, internet, Docker, or maintenance.";
@@ -487,7 +598,6 @@
   }
 
   loadHealth();
-  setInterval(() => location.reload(), 60_000);
 </script>
 </body>
 </html>
