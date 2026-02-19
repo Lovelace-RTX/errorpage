@@ -4,119 +4,378 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>corewatcher</title>
+  <meta name="theme-color" content="#0b0b10" />
   <style>
     :root{
-      --bg:#0b0b10; --card:rgba(255,255,255,.04); --border:rgba(255,255,255,.10);
-      --text:#eaeaf2; --muted:rgba(234,234,242,.75);
-      --good:#4ade80; --bad:#fb7185; --warn:#fbbf24;
+      --bg:#07070c;
+      --card:rgba(255,255,255,.05);
+      --border:rgba(255,255,255,.11);
+      --text:#f2f2fb;
+      --muted:rgba(242,242,251,.72);
+
+      --good:#38f29b;
+      --bad:#ff4d6d;
+      --warn:#ffd166;
+
       --accent:#ff2d55;
+      --accent2:#8b5cf6;
+      --accent3:#22d3ee;
+
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --radius: 22px;
     }
-    *{box-sizing:border-box}
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:radial-gradient(1200px 700px at 20% 10%, rgba(255,45,85,.18), transparent 55%),
-                 radial-gradient(900px 600px at 90% 90%, rgba(255,45,85,.10), transparent 55%),
-                 var(--bg);
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       color:var(--text);
-      min-height:100vh; display:grid; place-items:center; padding:22px;
+      background: var(--bg);
+      overflow-x:hidden;
     }
-    .wrap{width:min(960px,100%)}
-    .top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px}
-    .brand{display:flex; align-items:center; gap:12px}
+
+    /* Animated background aura */
+    .bg{
+      position:fixed; inset:0;
+      background:
+        radial-gradient(900px 520px at 18% 10%, rgba(255,45,85,.20), transparent 60%),
+        radial-gradient(900px 520px at 88% 25%, rgba(139,92,246,.16), transparent 60%),
+        radial-gradient(1000px 620px at 50% 100%, rgba(34,211,238,.10), transparent 60%),
+        radial-gradient(1100px 800px at 50% 50%, rgba(255,255,255,.04), transparent 55%);
+      filter: saturate(1.15);
+      pointer-events:none;
+    }
+    .noise{
+      position:fixed; inset:-20%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+      opacity:.12;
+      mix-blend-mode: overlay;
+      pointer-events:none;
+      transform: rotate(2deg);
+    }
+    .shine{
+      position:fixed; inset:0;
+      background: linear-gradient(110deg,
+        transparent 0%,
+        rgba(255,255,255,.05) 12%,
+        transparent 24%,
+        transparent 100%
+      );
+      animation: sweep 10s linear infinite;
+      pointer-events:none;
+      opacity:.35;
+    }
+    @keyframes sweep{
+      0%{ transform: translateX(-60%); }
+      100%{ transform: translateX(120%); }
+    }
+
+    .wrap{
+      position:relative;
+      width:min(1080px, 100%);
+      margin:0 auto;
+      padding: 28px 18px 34px;
+    }
+
+    /* Top header */
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 18px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width: 260px;
+    }
     .logo{
-      width:42px;height:42px;border-radius:14px;
-      background:linear-gradient(135deg, rgba(255,45,85,.9), rgba(255,45,85,.25));
-      box-shadow:0 10px 30px rgba(255,45,85,.15);
-      border:1px solid rgba(255,255,255,.12);
+      width:46px; height:46px;
+      border-radius:16px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.65), transparent 55%),
+        linear-gradient(135deg, rgba(255,45,85,.95), rgba(139,92,246,.35));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 18px 48px rgba(255,45,85,.16);
+      position:relative;
+      overflow:hidden;
     }
-    h1{font-size:22px;margin:0}
+    .logo::after{
+      content:"";
+      position:absolute; inset:-60%;
+      background: conic-gradient(from 140deg, transparent, rgba(255,255,255,.25), transparent 60%);
+      animation: spin 7.5s linear infinite;
+      opacity:.65;
+    }
+    @keyframes spin{
+      to{ transform: rotate(360deg); }
+    }
+    .brand h1{
+      font-size: 22px;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      margin-top:2px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Status pill */
     .pill{
-      font-size:12px; padding:7px 10px; border-radius:999px;
-      border:1px solid var(--border); background:rgba(255,255,255,.03);
-      color:var(--muted);
-      display:flex; gap:8px; align-items:center;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 28px rgba(0,0,0,.22);
       white-space:nowrap;
+      user-select:none;
     }
-    .dot{width:8px;height:8px;border-radius:50%}
-    .grid{display:grid; grid-template-columns:1.25fr .75fr; gap:14px}
-    @media (max-width: 860px){ .grid{grid-template-columns:1fr} }
+    .dot{
+      width:10px; height:10px;
+      border-radius:50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 0 rgba(255, 209, 102, .0);
+    }
+    .pillText{
+      font-size: 13px;
+      color: rgba(242,242,251,.85);
+    }
+    .pulse-good{ animation: pulseGood 1.7s ease-in-out infinite; }
+    .pulse-bad{ animation: pulseBad 1.2s ease-in-out infinite; }
+    @keyframes pulseGood{
+      0%{ box-shadow: 0 0 0 0 rgba(56,242,155,.0); }
+      40%{ box-shadow: 0 0 0 10px rgba(56,242,155,.12); }
+      100%{ box-shadow: 0 0 0 18px rgba(56,242,155,.0); }
+    }
+    @keyframes pulseBad{
+      0%{ box-shadow: 0 0 0 0 rgba(255,77,109,.0); }
+      35%{ box-shadow: 0 0 0 11px rgba(255,77,109,.12); }
+      100%{ box-shadow: 0 0 0 20px rgba(255,77,109,.0); }
+    }
+
+    /* Cards */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 14px;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+      .top{ align-items:flex-start; flex-direction:column; }
+      .pill{ width: fit-content; }
+    }
 
     .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:18px;
-      backdrop-filter: blur(10px);
+      position:relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        linear-gradient(120deg,
+          rgba(255,45,85,.18),
+          rgba(139,92,246,.10),
+          rgba(34,211,238,.08),
+          transparent 70%);
+      opacity:.32;
+      pointer-events:none;
+      transform: translateY(-35%);
+    }
+    .card::after{
+      content:"";
+      position:absolute; inset:0;
+      border-radius: var(--radius);
+      background: radial-gradient(520px 180px at 25% 0%, rgba(255,255,255,.08), transparent 65%);
+      pointer-events:none;
+      opacity:.55;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    .card h2{
+      margin:0 0 10px;
+      font-size: 18px;
+      letter-spacing:.2px;
+    }
+    .muted{
+      color: var(--muted);
+      line-height:1.55;
+      font-size: 14px;
+      margin:0 0 12px;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 3px 8px;
+      border-radius: 10px;
+      color: rgba(242,242,251,.92);
+      display:inline-block;
+      transform: translateY(-1px);
+    }
+
+    .btnRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 8px;
     }
     .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.16);
-      background:rgba(255,45,85,.18);
-      color:var(--text); text-decoration:none; font-weight:700;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       gap:10px;
-      transition:transform .08s ease, background .18s ease;
+      padding: 12px 14px;
+      border-radius: 16px;
+      text-decoration:none;
+      font-weight: 750;
+      letter-spacing:.2px;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(135deg, rgba(255,45,85,.28), rgba(139,92,246,.14));
+      box-shadow: 0 14px 38px rgba(255,45,85,.12);
+      transition: transform .09s ease, filter .2s ease, background .2s ease;
     }
-    .btn:hover{transform:translateY(-1px); background:rgba(255,45,85,.26)}
-    .btn:active{transform:translateY(0px)}
-    .muted{color:var(--muted); line-height:1.5}
-    ol{margin:10px 0 0 18px; color:var(--muted); line-height:1.55}
-    code{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas;
-      background:rgba(255,255,255,.06);
-      padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.10);
-      color:rgba(234,234,242,.92);
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+    .btn:active{ transform: translateY(0px); filter: brightness(.98); }
+    .btn.secondary{
+      background: rgba(255,255,255,.04);
+      box-shadow: none;
+      font-weight: 650;
+      color: rgba(242,242,251,.92);
     }
-    .kv{display:grid; grid-template-columns: 120px 1fr; gap:10px; margin-top:8px}
-    .k{color:rgba(234,234,242,.7)}
-    .v{color:rgba(234,234,242,.92)}
-    .small{font-size:12px; color:rgba(234,234,242,.65); margin-top:10px}
+
+    .steps{
+      margin: 10px 0 0 18px;
+      color: var(--muted);
+      line-height:1.6;
+      font-size: 14px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap: 10px;
+      margin-top: 10px;
+      align-items:start;
+    }
+    .k{ color: rgba(242,242,251,.65); font-size: 13px; }
+    .v{ color: rgba(242,242,251,.92); font-size: 14px; }
+
+    .small{
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(242,242,251,.62);
+      line-height:1.4;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      color: rgba(242,242,251,.82);
+    }
+    .badgeDot{ width:8px; height:8px; border-radius:50%; background: var(--warn); }
+
+    /* Footer micro */
+    .footer{
+      margin-top: 14px;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:10px;
+      color: rgba(242,242,251,.50);
+      font-size: 12px;
+    }
+    .link{
+      color: rgba(242,242,251,.72);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(242,242,251,.25);
+    }
+    .link:hover{ color: rgba(242,242,251,.92); border-bottom-color: rgba(242,242,251,.45); }
   </style>
 </head>
+
 <body>
+  <div class="bg"></div>
+  <div class="noise"></div>
+  <div class="shine"></div>
+
   <div class="wrap">
     <div class="top">
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>corewatcher</h1>
-          <div class="muted" style="font-size:13px">Private homelab access via Tailscale</div>
+          <div class="subtitle">Private homelab access via Tailscale</div>
         </div>
       </div>
 
-      <div class="pill" id="healthPill">
-        <span class="dot" id="healthDot" style="background: var(--warn)"></span>
-        <span id="healthText">Checking server…</span>
+      <div class="pill" id="healthPill" title="This is updated by the server. If it stops updating, assume it's down.">
+        <span class="dot" id="healthDot"></span>
+        <span class="pillText" id="healthText">Checking server…</span>
       </div>
     </div>
 
     <div class="grid">
-      <div class="card">
-        <h2 style="margin:0 0 8px;font-size:18px">Get access</h2>
-        <p class="muted" style="margin:0 0 12px">
-          If you can’t reach services like <code>jelly.corewatcher.com</code>, you’re probably not connected to Tailscale.
+      <section class="card">
+        <h2>Get access</h2>
+        <p class="muted">
+          If you can’t reach services like <span class="kbd">jelly.corewatcher.com</span>,
+          you’re probably not connected to Tailscale.
         </p>
 
-        <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">
-          Open Tailscale Login →
-        </a>
+        <div class="btnRow">
+          <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">
+            Open Tailscale Login →
+          </a>
+          <a class="btn secondary" href="https://tailscale.com/download" target="_blank" rel="noopener">
+            Download Tailscale
+          </a>
+        </div>
 
-        <h3 style="margin:16px 0 6px;font-size:15px">How to reach the server</h3>
-        <ol>
+        <div style="height:14px"></div>
+
+        <span class="badge">
+          <span class="badgeDot" id="badgeDot"></span>
+          Quick steps
+        </span>
+
+        <ol class="steps">
           <li>Install Tailscale on your device.</li>
-          <li>Sign in on <code>login.tailscale.com</code>.</li>
+          <li>Sign in on <span class="kbd">login.tailscale.com</span>.</li>
           <li>Turn Tailscale “On”.</li>
-          <li>Open your services (e.g. <code>jelly.corewatcher.com</code>).</li>
+          <li>Open your services (e.g. <span class="kbd">jelly.corewatcher.com</span>).</li>
         </ol>
 
         <div class="small">
-          Tip: if you’re on mobile, make sure VPN/Tailscale is enabled for your current network.
+          Mobile tip: if you swapped Wi-Fi / mobile data, toggle Tailscale off/on once.
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <h2 style="margin:0 0 8px;font-size:18px">Server health</h2>
-        <p class="muted" style="margin:0 0 10px">
-          This is updated by the server itself. If updates stop, assume it’s down.
+      <section class="card">
+        <h2>Server health</h2>
+        <p class="muted" style="margin-bottom:10px">
+          Updated by the server itself. If updates stop, assume it’s down.
         </p>
 
         <div class="kv">
@@ -126,34 +385,59 @@
         </div>
 
         <div class="small" id="hint"></div>
-      </div>
+
+        <div class="footer">
+          <div id="ageLine">—</div>
+          <div>
+            <a class="link" href="./health.json" target="_blank" rel="noopener">health.json</a>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
 <script>
   const HEALTH_URL = "./health.json?cachebust=" + Date.now();
-  const STALE_MINUTES = 6; // if no update within X minutes => offline
+  const STALE_MINUTES = 6; // if last_seen older than this => offline
 
-  function setPill(state, text){
-    const dot = document.getElementById("healthDot");
-    const pill = document.getElementById("healthPill");
-    const healthText = document.getElementById("healthText");
-    healthText.textContent = text;
+  const el = (id) => document.getElementById(id);
+
+  function setStatus(state, text){
+    const dot = el("healthDot");
+    const badgeDot = el("badgeDot");
+    const pill = el("healthPill");
+    el("healthText").textContent = text;
+
+    dot.classList.remove("pulse-good","pulse-bad");
 
     if(state === "up"){
       dot.style.background = "var(--good)";
-      pill.style.borderColor = "rgba(74,222,128,.35)";
+      badgeDot.style.background = "var(--good)";
+      pill.style.borderColor = "rgba(56,242,155,.35)";
+      dot.classList.add("pulse-good");
     } else if(state === "down"){
       dot.style.background = "var(--bad)";
-      pill.style.borderColor = "rgba(251,113,133,.35)";
+      badgeDot.style.background = "var(--bad)";
+      pill.style.borderColor = "rgba(255,77,109,.35)";
+      dot.classList.add("pulse-bad");
     } else {
       dot.style.background = "var(--warn)";
-      pill.style.borderColor = "rgba(251,191,36,.35)";
+      badgeDot.style.background = "var(--warn)";
+      pill.style.borderColor = "rgba(255,209,102,.35)";
     }
   }
 
   function fmt(ts){
     try { return new Date(ts).toLocaleString(); } catch { return ts; }
+  }
+
+  function minutesAgo(ts){
+    try{
+      const ms = Date.now() - new Date(ts).getTime();
+      return Math.max(0, Math.floor(ms / 60000));
+    } catch {
+      return null;
+    }
   }
 
   async function loadHealth(){
@@ -162,37 +446,48 @@
       if(!res.ok) throw new Error("health.json not ok");
       const data = await res.json();
 
-      document.getElementById("statusLine").textContent = (data.server === "up") ? "Online ✅" : "Offline ❌";
-      document.getElementById("lastSeen").textContent = data.last_seen ? fmt(data.last_seen) : "—";
-      document.getElementById("message").textContent = data.message || "—";
+      const lastSeen = data.last_seen ? fmt(data.last_seen) : "—";
+      el("lastSeen").textContent = lastSeen;
+      el("message").textContent = data.message || "—";
 
       // stale logic
-      let stale = false;
+      let stale = true;
+      let ageMins = null;
       if(data.last_seen){
-        const ageMs = Date.now() - new Date(data.last_seen).getTime();
-        stale = ageMs > STALE_MINUTES * 60 * 1000;
+        ageMins = minutesAgo(data.last_seen);
+        stale = ageMins === null ? true : (ageMins > STALE_MINUTES);
       }
 
-      if (data.server !== "up" || stale){
-        setPill("down", "Server offline / unreachable");
-        document.getElementById("hint").textContent =
-          "If you expected it to be up: check power, internet, Docker, or maintenance.";
+      const serverUp = (data.server === "up") && !stale;
+
+      el("statusLine").textContent = serverUp ? "Online ✅" : "Offline ❌";
+
+      if(serverUp){
+        setStatus("up","Server online");
+        el("hint").textContent = "If you still can’t reach services: connect Tailscale.";
       } else {
-        setPill("up", "Server online");
-        document.getElementById("hint").textContent =
-          "If you still can’t reach services: connect Tailscale.";
+        setStatus("down","Server offline / unreachable");
+        el("hint").textContent = "If you expected it to be up: check power, internet, Docker, or maintenance.";
       }
+
+      if(ageMins === null){
+        el("ageLine").textContent = "Last update: unknown";
+      } else {
+        el("ageLine").textContent = `Last update: ${ageMins} min ago`;
+      }
+
     } catch (e){
-      setPill("down", "Server offline / unreachable");
-      document.getElementById("statusLine").textContent = "Offline ❌";
-      document.getElementById("lastSeen").textContent = "—";
-      document.getElementById("message").textContent = "No health data available.";
-      document.getElementById("hint").textContent =
-        "Health feed missing. If this is new, ensure health.json exists in the repo.";
+      setStatus("down","Server offline / unreachable");
+      el("statusLine").textContent = "Offline ❌";
+      el("lastSeen").textContent = "—";
+      el("message").textContent = "No health data available.";
+      el("hint").textContent = "Health feed missing. Ensure health.json exists and is reachable.";
+      el("ageLine").textContent = "Last update: —";
     }
   }
 
   loadHealth();
+  setInterval(() => location.reload(), 60_000);
 </script>
 </body>
 </html>
