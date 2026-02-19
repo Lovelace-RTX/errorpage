@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>corewatcher — unreachable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --red: #ff3333;
+      --red-dim: rgba(255, 51, 51, 0.08);
+      --text: #e8e8e8;
+      --muted: #555;
+      --accent: #ff3333;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,51,51,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,51,51,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Glow blob */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255,51,51,0.05) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      width: 90%;
+      padding: 2.5rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    .error-code {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+
+    h1 span {
+      color: var(--red);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+      color: #aaa;
+      line-height: 1.5;
+    }
+
+    .check-icon {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--red);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .footer a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer a:hover {
+      color: var(--red);
+    }
+
+    .timestamp {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <span class="logo">corewatcher.com</span>
+      <span class="status-dot">
+        <span class="dot"></span>
+        offline
+      </span>
+    </div>
+
+    <div class="error-code">ERR_UNREACHABLE</div>
+    <h1>Site is <span>unreachable</span></h1>
+
+    <div class="checklist">
+      <div class="check-item">
+        <span class="check-icon">[!]</span>
+        <span>The server may be temporarily down for maintenance.</span>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">[!]</span>
+        <span>You may have forgotten to connect to VPN — make sure Tailscale is active before retrying.</span>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">[?]</span>
+        <span>If the issue persists, contact the administrator of this site.</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>corewatcher infrastructure</span>
+      <span class="timestamp" id="ts"></span>
+    </div>
+  </div>
+
+  <script>
+    const ts = document.getElementById('ts');
+    function tick() {
+      const now = new Date();
+      ts.textContent = now.toUTCString().replace('GMT', 'UTC');
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
