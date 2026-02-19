@@ -1,253 +1,198 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>corewatcher — unreachable</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>corewatcher</title>
   <style>
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root{
+      --bg:#0b0b10; --card:rgba(255,255,255,.04); --border:rgba(255,255,255,.10);
+      --text:#eaeaf2; --muted:rgba(234,234,242,.75);
+      --good:#4ade80; --bad:#fb7185; --warn:#fbbf24;
+      --accent:#ff2d55;
     }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:radial-gradient(1200px 700px at 20% 10%, rgba(255,45,85,.18), transparent 55%),
+                 radial-gradient(900px 600px at 90% 90%, rgba(255,45,85,.10), transparent 55%),
+                 var(--bg);
+      color:var(--text);
+      min-height:100vh; display:grid; place-items:center; padding:22px;
+    }
+    .wrap{width:min(960px,100%)}
+    .top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px}
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background:linear-gradient(135deg, rgba(255,45,85,.9), rgba(255,45,85,.25));
+      box-shadow:0 10px 30px rgba(255,45,85,.15);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    h1{font-size:22px;margin:0}
+    .pill{
+      font-size:12px; padding:7px 10px; border-radius:999px;
+      border:1px solid var(--border); background:rgba(255,255,255,.03);
+      color:var(--muted);
+      display:flex; gap:8px; align-items:center;
+      white-space:nowrap;
+    }
+    .dot{width:8px;height:8px;border-radius:50%}
+    .grid{display:grid; grid-template-columns:1.25fr .75fr; gap:14px}
+    @media (max-width: 860px){ .grid{grid-template-columns:1fr} }
 
-    :root {
-      --bg: #0a0a0a;
-      --surface: #111111;
-      --border: #1e1e1e;
-      --red: #ff3333;
-      --red-dim: rgba(255, 51, 51, 0.08);
-      --text: #e8e8e8;
-      --muted: #555;
-      --accent: #ff3333;
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      backdrop-filter: blur(10px);
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,45,85,.18);
+      color:var(--text); text-decoration:none; font-weight:700;
+      gap:10px;
+      transition:transform .08s ease, background .18s ease;
     }
-
-    /* Grid background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,51,51,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,51,51,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
+    .btn:hover{transform:translateY(-1px); background:rgba(255,45,85,.26)}
+    .btn:active{transform:translateY(0px)}
+    .muted{color:var(--muted); line-height:1.5}
+    ol{margin:10px 0 0 18px; color:var(--muted); line-height:1.55}
+    code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas;
+      background:rgba(255,255,255,.06);
+      padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.10);
+      color:rgba(234,234,242,.92);
     }
-
-    /* Glow blob */
-    body::after {
-      content: '';
-      position: fixed;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(255,51,51,0.05) 0%, transparent 70%);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      animation: pulse 4s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      max-width: 560px;
-      width: 90%;
-      padding: 2.5rem;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      animation: fadeIn 0.6s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .status-dot {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--red);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      background: var(--red);
-      border-radius: 50%;
-      animation: blink 1.5s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-
-    .error-code {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--red);
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      margin-bottom: 0.75rem;
-    }
-
-    h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1.1;
-      color: var(--text);
-      margin-bottom: 1.25rem;
-    }
-
-    h1 span {
-      color: var(--red);
-    }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 1.5rem 0;
-    }
-
-    .checklist {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .check-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      font-size: 0.875rem;
-      color: #aaa;
-      line-height: 1.5;
-    }
-
-    .check-icon {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--red);
-      margin-top: 2px;
-      flex-shrink: 0;
-    }
-
-    .footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .footer a {
-      color: var(--muted);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .footer a:hover {
-      color: var(--red);
-    }
-
-    .timestamp {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-    }
+    .kv{display:grid; grid-template-columns: 120px 1fr; gap:10px; margin-top:8px}
+    .k{color:rgba(234,234,242,.7)}
+    .v{color:rgba(234,234,242,.92)}
+    .small{font-size:12px; color:rgba(234,234,242,.65); margin-top:10px}
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="top-bar">
-      <span class="logo">corewatcher.com</span>
-      <span class="status-dot">
-        <span class="dot"></span>
-        offline
-      </span>
-    </div>
-
-    <div class="error-code">ERR_UNREACHABLE</div>
-    <h1>Site is <span>unreachable</span></h1>
-
-    <div class="checklist">
-      <div class="check-item">
-        <span class="check-icon">[!]</span>
-        <span>The server may be temporarily down for maintenance.</span>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>corewatcher</h1>
+          <div class="muted" style="font-size:13px">Private homelab access via Tailscale</div>
+        </div>
       </div>
-      <div class="check-item">
-        <span class="check-icon">[!]</span>
-        <span>You may have forgotten to connect to VPN — make sure Tailscale is active before retrying.</span>
-      </div>
-      <div class="check-item">
-        <span class="check-icon">[?]</span>
-        <span>If the issue persists, contact the administrator of this site.</span>
+
+      <div class="pill" id="healthPill">
+        <span class="dot" id="healthDot" style="background: var(--warn)"></span>
+        <span id="healthText">Checking server…</span>
       </div>
     </div>
 
-    <div class="footer">
-      <span>corewatcher infrastructure</span>
-      <span class="timestamp" id="ts"></span>
+    <div class="grid">
+      <div class="card">
+        <h2 style="margin:0 0 8px;font-size:18px">Get access</h2>
+        <p class="muted" style="margin:0 0 12px">
+          If you can’t reach services like <code>jelly.corewatcher.com</code>, you’re probably not connected to Tailscale.
+        </p>
+
+        <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">
+          Open Tailscale Login →
+        </a>
+
+        <h3 style="margin:16px 0 6px;font-size:15px">How to reach the server</h3>
+        <ol>
+          <li>Install Tailscale on your device.</li>
+          <li>Sign in on <code>login.tailscale.com</code>.</li>
+          <li>Turn Tailscale “On”.</li>
+          <li>Open your services (e.g. <code>jelly.corewatcher.com</code>).</li>
+        </ol>
+
+        <div class="small">
+          Tip: if you’re on mobile, make sure VPN/Tailscale is enabled for your current network.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:0 0 8px;font-size:18px">Server health</h2>
+        <p class="muted" style="margin:0 0 10px">
+          This is updated by the server itself. If updates stop, assume it’s down.
+        </p>
+
+        <div class="kv">
+          <div class="k">Status</div><div class="v" id="statusLine">—</div>
+          <div class="k">Last seen</div><div class="v" id="lastSeen">—</div>
+          <div class="k">Message</div><div class="v" id="message">—</div>
+        </div>
+
+        <div class="small" id="hint"></div>
+      </div>
     </div>
   </div>
 
-  <script>
-    const ts = document.getElementById('ts');
-    function tick() {
-      const now = new Date();
-      ts.textContent = now.toUTCString().replace('GMT', 'UTC');
+<script>
+  const HEALTH_URL = "./health.json?cachebust=" + Date.now();
+  const STALE_MINUTES = 6; // if no update within X minutes => offline
+
+  function setPill(state, text){
+    const dot = document.getElementById("healthDot");
+    const pill = document.getElementById("healthPill");
+    const healthText = document.getElementById("healthText");
+    healthText.textContent = text;
+
+    if(state === "up"){
+      dot.style.background = "var(--good)";
+      pill.style.borderColor = "rgba(74,222,128,.35)";
+    } else if(state === "down"){
+      dot.style.background = "var(--bad)";
+      pill.style.borderColor = "rgba(251,113,133,.35)";
+    } else {
+      dot.style.background = "var(--warn)";
+      pill.style.borderColor = "rgba(251,191,36,.35)";
     }
-    tick();
-    setInterval(tick, 1000);
-  </script>
+  }
+
+  function fmt(ts){
+    try { return new Date(ts).toLocaleString(); } catch { return ts; }
+  }
+
+  async function loadHealth(){
+    try{
+      const res = await fetch(HEALTH_URL, { cache: "no-store" });
+      if(!res.ok) throw new Error("health.json not ok");
+      const data = await res.json();
+
+      document.getElementById("statusLine").textContent = (data.server === "up") ? "Online ✅" : "Offline ❌";
+      document.getElementById("lastSeen").textContent = data.last_seen ? fmt(data.last_seen) : "—";
+      document.getElementById("message").textContent = data.message || "—";
+
+      // stale logic
+      let stale = false;
+      if(data.last_seen){
+        const ageMs = Date.now() - new Date(data.last_seen).getTime();
+        stale = ageMs > STALE_MINUTES * 60 * 1000;
+      }
+
+      if (data.server !== "up" || stale){
+        setPill("down", "Server offline / unreachable");
+        document.getElementById("hint").textContent =
+          "If you expected it to be up: check power, internet, Docker, or maintenance.";
+      } else {
+        setPill("up", "Server online");
+        document.getElementById("hint").textContent =
+          "If you still can’t reach services: connect Tailscale.";
+      }
+    } catch (e){
+      setPill("down", "Server offline / unreachable");
+      document.getElementById("statusLine").textContent = "Offline ❌";
+      document.getElementById("lastSeen").textContent = "—";
+      document.getElementById("message").textContent = "No health data available.";
+      document.getElementById("hint").textContent =
+        "Health feed missing. If this is new, ensure health.json exists in the repo.";
+    }
+  }
+
+  loadHealth();
+</script>
 </body>
 </html>
