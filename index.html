@@ -867,41 +867,16 @@
     const overlay = el("termOverlay");
     const body = el("termBody");
     let inputEl = null;
+    let gameActive = false;
 
     const MOTD = [
       { t: "╔══════════════════════════════════════╗", c: "green" },
       { t: "║     corewatcher terminal v1.0.0      ║", c: "green bold" },
       { t: "╚══════════════════════════════════════╝", c: "green" },
       { t: "" },
-      { t: "  welcome back, davide.", c: "purple" },
+      { t: "  welcome to the void.", c: "purple" },
       { t: "  type 'help' to see available commands.", c: "dim" },
       { t: "" },
-    ];
-
-    const ASCII = [
-      "        ___        ",
-      "       /   \\       ",
-      "      / ⬡   \\      ",
-      "     /   |    \\     ",
-      "    /    |     \\    ",
-      "   /_____|______\\   ",
-      "   \\     |      /   ",
-      "    \\    |     /    ",
-      "     \\   |    /     ",
-      "      \\     /      ",
-      "       \\___/       ",
-    ];
-
-    const INFO = [
-      "", "  davide@corewatcher", "  ─────────────────",
-      "  os      ubuntu server 24.04",
-      "  cpu     i7-12800H (14c/20t)",
-      "  ram     64 GB DDR5",
-      "  gpu     RTX A2000 4GB",
-      "  disk    6 TB (NVMe + SSD)",
-      "  net     tailscale mesh vpn",
-      "  dns     pi-hole (custom)",
-      "  proxy   caddy + cloudflare",
     ];
 
     const QUOTES = [
@@ -914,35 +889,48 @@
       "\"Works in prod, don't touch it\" — ancient proverb",
       "\"The cloud is just someone else's computer\"",
       "\"rm -rf / speedruns any%\" — chaotic evil",
-      "\"I mass mass mass destruction\" — Persona 3 Reload enjoyer",
+      "\"SEGFAULT (core dumped)\" — the computer, probably",
+      "\"There are 10 types of people...\" — you know the rest",
+      "\"DNS: it's always DNS.\" — every sysadmin",
+      "\"I don't always test my code, but when I do, I do it in production.\"",
+      "\"To mass mass mass destruction!\"",
     ];
 
-    const SERVICES = [
-      "jellyfin      ✦  media server       jelly.corewatcher.com",
-      "nextcloud     ✦  file sync          cloud.corewatcher.com",
-      "homarr        ✦  control center     home.corewatcher.com",
-      "pi-hole       ✦  dns ad-block       dns.corewatcher.com",
-      "uptime-kuma   ✦  monitoring         status.corewatcher.com",
-      "immich        ✦  photos             photos.corewatcher.com",
-      "caddy         ✦  reverse proxy      (internal)",
-      "tailscale     ✦  vpn mesh           (internal)",
+    const FORTUNES = [
+      "You will mass mass mass mass mass destruct something in prod today.",
+      "A container restart is in your near future.",
+      "The stars align for a successful deployment... maybe.",
+      "You will discover a critical typo in a config file at 2 AM.",
+      "Lucky numbers: 22, 80, 443, 8080, 3000",
+      "A wild segfault appears in your future. Prepare accordingly.",
+      "Today is a good day to update your backups.",
+      "Someone will ask you to fix their printer. Resistance is futile.",
+      "Your next 'quick fix' will take 6 hours.",
+      "Uptime will be achieved... after one more reboot.",
+      "A mass mass mass of mass mass mass mass",
+      "You will mass mass— wait, wrong script.",
     ];
 
     const cmds = {
       help: () => [
         { t: "available commands:", c: "green bold" }, { t: "" },
-        { t: "  help         show this message" },
-        { t: "  status       server status" },
-        { t: "  services     list running services" },
-        { t: "  neofetch     system info" },
-        { t: "  about        about corewatcher" },
-        { t: "  quote        random tech quote" },
-        { t: "  uptime       server uptime" },
-        { t: "  whoami       who are you?" },
-        { t: "  ping         ping the void" },
-        { t: "  matrix       ????", c: "dim" },
-        { t: "  clear        clear terminal" },
-        { t: "  exit         close terminal" },
+        { t: "  help          show this message" },
+        { t: "  status        server status" },
+        { t: "  about         about corewatcher" },
+        { t: "  quote         random tech quote" },
+        { t: "  fortune       your tech fortune" },
+        { t: "  uptime        server uptime" },
+        { t: "  ping          ping the void" },
+        { t: "  traceroute    trace the route" },
+        { t: "  cowsay [msg]  moo" },
+        { t: "  ascii         random ascii art" },
+        { t: "  clock         current time" },
+        { t: "  hack          become a hacker", c: "dim" },
+        { t: "  pong          play pong!", c: "green" },
+        { t: "  snake         play snake!", c: "green" },
+        { t: "  matrix        digital rain", c: "dim" },
+        { t: "  clear         clear terminal" },
+        { t: "  exit          close terminal" },
         { t: "" },
       ],
       status: () => {
@@ -952,62 +940,174 @@
           { t: `checked: ${el("ageLine").textContent}`, c: "dim" },
         ];
       },
-      services: () => {
-        const l = [{ t: "active services on corewatcher:", c: "green bold" }, { t: "" }];
-        SERVICES.forEach(s => l.push({ t: "  " + s }));
-        l.push({ t: "" });
-        return l;
-      },
-      neofetch: () => {
-        const l = [];
-        const max = Math.max(ASCII.length, INFO.length);
-        for (let i = 0; i < max; i++) {
-          const a = (ASCII[i] || "").padEnd(22);
-          const b = INFO[i] || "";
-          l.push({ t: a + b, c: "green" });
-        }
-        l.push({ t: "" });
-        return l;
-      },
       about: () => [
         { t: "corewatcher", c: "green bold" },
-        { t: "a private homelab portal built by davide." },
-        { t: "self-hosted on a repurposed work laptop running" },
-        { t: "ubuntu server, docker, and way too many containers." },
+        { t: "a private homelab portal." },
+        { t: "self-hosted, dockerized, and tailscale-gated." },
         { t: "" },
         { t: "domain: corewatcher.com", c: "dim" },
         { t: "access: tailscale VPN only", c: "dim" },
+        { t: "stack:  linux · docker · caddy · cloudflare", c: "dim" },
         { t: "" },
       ],
       quote: () => [{ t: "" }, { t: QUOTES[Math.floor(Math.random() * QUOTES.length)], c: "purple" }, { t: "" }],
-      uptime: () => {
-        const d = Math.floor(Math.random() * 60) + 12, h = Math.floor(Math.random() * 24);
-        return [{ t: `up ${d} days, ${h} hours (probably)`, c: "green" }, { t: "this is vibes-based, not real telemetry", c: "dim" }];
-      },
-      whoami: () => [
-        { t: "davide", c: "green bold" },
-        { t: "2nd-year IT apprentice (Informatiker Plattformentwickler)" },
-        { t: "zurich, switzerland", c: "dim" },
+      fortune: () => [
         { t: "" },
-        { t: "skills: infrastructure, docker, networking, breaking things" },
-        { t: "hobbies: homelab, anime, persona, cooking, learning japanese" },
+        { t: "🔮 your tech fortune:", c: "amber" },
+        { t: "  " + FORTUNES[Math.floor(Math.random() * FORTUNES.length)], c: "purple" },
         { t: "" },
       ],
+      uptime: () => {
+        const d = Math.floor(Math.random() * 90) + 5, h = Math.floor(Math.random() * 24), m = Math.floor(Math.random() * 60);
+        return [
+          { t: ` ${String(d).padStart(3)} days ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`, c: "green" },
+          { t: "  (vibes-based telemetry, not real data)", c: "dim" }
+        ];
+      },
       ping: () => {
         const ms = Math.floor(Math.random() * 12) + 1;
         return [
           { t: `PING corewatcher.local (100.x.x.x): 56 data bytes`, c: "dim" },
-          { t: `64 bytes: icmp_seq=0 ttl=64 time=${ms}.${Math.floor(Math.random()*99)}ms`, c: "green" },
-          { t: `64 bytes: icmp_seq=1 ttl=64 time=${ms + 1}.${Math.floor(Math.random()*99)}ms`, c: "green" },
-          { t: `64 bytes: icmp_seq=2 ttl=64 time=${ms}.${Math.floor(Math.random()*99)}ms`, c: "green" },
+          { t: `64 bytes: icmp_seq=0 ttl=64 time=${ms}.${String(Math.floor(Math.random()*99)).padStart(2,'0')}ms`, c: "green" },
+          { t: `64 bytes: icmp_seq=1 ttl=64 time=${ms+1}.${String(Math.floor(Math.random()*99)).padStart(2,'0')}ms`, c: "green" },
+          { t: `64 bytes: icmp_seq=2 ttl=64 time=${ms}.${String(Math.floor(Math.random()*99)).padStart(2,'0')}ms`, c: "green" },
           { t: `--- corewatcher.local ping statistics ---`, c: "dim" },
-          { t: `3 packets transmitted, 3 received, 0% packet loss`, c: "" },
+          { t: `3 packets transmitted, 3 received, 0% packet loss` },
         ];
       },
+      traceroute: () => {
+        const lines = [{ t: "traceroute to corewatcher.local, 8 hops max", c: "dim" }];
+        const hops = [
+          "gateway.local", "isp-edge-01.net", "core-rtr-zh.backbone.net",
+          "ix-zurich-01.peering.net", "cdn-edge.cloudflare.com",
+          "tailscale-relay.ts.net", "mesh-node.tailnet.internal", "corewatcher.local"
+        ];
+        for (let i = 0; i < hops.length; i++) {
+          const ms = (Math.random() * 15 + i * 2).toFixed(2);
+          lines.push({ t: ` ${String(i+1).padStart(2)}  ${hops[i].padEnd(32)} ${ms} ms`, c: i === hops.length - 1 ? "green" : "" });
+        }
+        return lines;
+      },
+      clock: () => {
+        const now = new Date();
+        const time = now.toLocaleTimeString('en-US', { hour12: false });
+        const date = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const big = time.split('').map(ch => {
+          const digits = {
+            '0': ['╔═╗','║ ║','╚═╝'], '1': ['  ╗','  ║','  ╝'], '2': ['╔═╗','╔═╝','╚═╝'],
+            '3': ['╔═╗','╔═╗','╚═╝'], '4': ['╗ ╗','╚═╣','  ╝'], '5': ['╔═╗','╚═╗','╚═╝'],
+            '6': ['╔═╗','╠═╗','╚═╝'], '7': ['╔═╗','  ║','  ╝'], '8': ['╔═╗','╠═╣','╚═╝'],
+            '9': ['╔═╗','╚═╣','╚═╝'], ':': [' · ',' · ','   ']
+          };
+          return digits[ch] || ['   ','   ','   '];
+        });
+        const rows = [0,1,2].map(r => big.map(d => d[r]).join(' '));
+        return [
+          { t: "" },
+          ...rows.map(r => ({ t: "  " + r, c: "green" })),
+          { t: "" },
+          { t: "  " + date, c: "dim" },
+          { t: "" },
+        ];
+      },
+      ascii: () => {
+        const arts = [
+          [
+            "    ╱|、",
+            "  (˚ˎ 。7",
+            "   |、˜〵",
+            "   じしˍ,)ノ",
+            "",
+            "   meow.",
+          ],
+          [
+            "  ┌─────────┐",
+            "  │ ██  ██  │",
+            "  │  ▀██▀   │",
+            "  │  ╱  ╲   │",
+            "  └─────────┘",
+            "    ROBOT.exe",
+          ],
+          [
+            "     .  *  .   .",
+            "  *    🌍    *",
+            "    .    *  .  *",
+            "  *   .    .   .",
+            "    .  *  .   *",
+            "",
+            "   lost in space.",
+          ],
+          [
+            "   ⠀⠀⠀⢀⡤⠖⠒⠛⠛⠒⠲⢤⡀",
+            "   ⠀⠀⣴⠋⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦",
+            "   ⠀⣸⠁⠀⣠⡴⠶⠶⣤⡀⠀⠀⠀⠘⡆",
+            "   ⠀⡇⠀⣼⠁⠀⠀⠀⠀⠹⡄⠀⠀⠀⡇",
+            "",
+            "   the void stares back.",
+          ],
+          [
+            "   ┌──────────────────┐",
+            "   │  ┌────────────┐  │",
+            "   │  │  01001000  │  │",
+            "   │  │  01101001  │  │",
+            "   │  └────────────┘  │",
+            "   │   ═══════════    │",
+            "   └──────────────────┘",
+            "",
+            "   it says 'Hi'.",
+          ],
+        ];
+        const art = arts[Math.floor(Math.random() * arts.length)];
+        return [{ t: "" }, ...art.map(t => ({ t, c: "green" })), { t: "" }];
+      },
+      hack: () => {
+        const lines = [{ t: "" }, { t: "INITIATING HACK SEQUENCE...", c: "red bold" }, { t: "" }];
+        const msgs = [
+          "▓ bypassing mainframe firewall...",
+          "▓ cracking 256-bit encryption... (lol)",
+          "▓ downloading the internet...",
+          "▓ hacking the gibson...",
+          "▓ inserting memes into database...",
+          "▓ reticulating splines...",
+          "▓ reversing the polarity...",
+          "▓ accessing mainframe...",
+          "▓ decrypting passwords: ******** → hunter2",
+        ];
+        for (let i = 0; i < 6; i++) {
+          lines.push({ t: "  " + msgs[Math.floor(Math.random() * msgs.length)], c: "green" });
+        }
+        lines.push({ t: "" });
+        lines.push({ t: "  ACCESS GRANTED", c: "green bold" });
+        lines.push({ t: "  just kidding. you're already on the tailnet.", c: "dim" });
+        lines.push({ t: "" });
+        return lines;
+      },
+      pong: () => { startPong(); return "GAME"; },
+      snake: () => { startSnake(); return "GAME"; },
       matrix: () => { startMatrix(); return [{ t: "entering the matrix... (click to exit)", c: "green" }]; },
       clear: () => "CLEAR",
       exit: () => "EXIT",
     };
+
+    /* cowsay is special — takes arguments */
+    function cowsay(msg) {
+      if (!msg) msg = "moo";
+      const top = " " + "_".repeat(msg.length + 2);
+      const mid = `< ${msg} >`;
+      const bot = " " + "─".repeat(msg.length + 2);
+      return [
+        { t: "" },
+        { t: top },
+        { t: mid, c: "green bold" },
+        { t: bot },
+        { t: "        \\   ^__^" },
+        { t: "         \\  (oo)\\_______" },
+        { t: "            (__)\\       )\\/\\" },
+        { t: "                ||----w |" },
+        { t: "                ||     ||" },
+        { t: "" },
+      ];
+    }
 
     function addLines(lines) {
       for (const l of lines) {
@@ -1020,6 +1120,7 @@
     }
 
     function prompt() {
+      if (gameActive) return;
       const row = document.createElement("div");
       row.className = "term-input-row";
       row.innerHTML = `<span class="term-prompt">❯&nbsp;</span><input class="term-input" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">`;
@@ -1032,22 +1133,51 @@
 
     function onKey(e) {
       if (e.key !== "Enter") return;
-      const val = inputEl.value.trim().toLowerCase();
+      const raw = inputEl.value.trim();
+      const val = raw.toLowerCase();
       inputEl.removeEventListener("keydown", onKey);
       inputEl.disabled = true;
 
       const line = document.createElement("div");
       line.className = "term-line";
-      line.innerHTML = `<span class="accent">❯</span> ${val || " "}`;
+      line.innerHTML = `<span class="accent">❯</span> ${raw || " "}`;
       inputEl.parentElement.replaceWith(line);
 
       if (!val) { prompt(); return; }
+
+      /* cowsay with arguments */
+      if (val.startsWith("cowsay")) {
+        const msg = raw.slice(6).trim();
+        addLines(cowsay(msg));
+        prompt();
+        return;
+      }
+
+      /* sudo easter egg */
+      if (val.startsWith("sudo")) {
+        addLines([{ t: "nice try. you're not root here.", c: "red" }]);
+        prompt();
+        return;
+      }
+
+      /* rm -rf easter egg */
+      if (val.includes("rm -rf") || val.includes("rm -fr")) {
+        addLines([
+          { t: "" },
+          { t: "🚨 NICE TRY 🚨", c: "red bold" },
+          { t: "this terminal is read-only, you menace.", c: "red" },
+          { t: "" },
+        ]);
+        prompt();
+        return;
+      }
 
       const fn = cmds[val];
       if (fn) {
         const r = fn();
         if (r === "CLEAR") { body.innerHTML = ""; prompt(); return; }
-        if (r === "EXIT") { close(); return; }
+        if (r === "EXIT") { closeTerm(); return; }
+        if (r === "GAME") return; /* game handles its own prompt */
         addLines(r);
       } else {
         addLines([{ t: `command not found: ${val}. try 'help'.`, c: "red" }]);
@@ -1055,15 +1185,263 @@
       prompt();
     }
 
-    function open() { overlay.classList.add("open"); body.innerHTML = ""; addLines(MOTD); prompt(); }
-    function close() { overlay.classList.remove("open"); stopMatrix(); }
+    function openTerm() { overlay.classList.add("open"); body.innerHTML = ""; gameActive = false; addLines(MOTD); prompt(); }
+    function closeTerm() { overlay.classList.remove("open"); stopMatrix(); gameActive = false; }
 
-    el("logoBtn").addEventListener("click", open);
-    el("termClose").addEventListener("click", close);
-    overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && overlay.classList.contains("open")) close(); });
+    el("logoBtn").addEventListener("click", openTerm);
+    el("termClose").addEventListener("click", closeTerm);
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeTerm(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && overlay.classList.contains("open")) closeTerm(); });
 
-    /* MATRIX RAIN */
+    /* ======================== PONG ======================== */
+    function startPong() {
+      gameActive = true;
+      addLines([
+        { t: "" },
+        { t: "🏓 PONG — first to 5 wins!", c: "green bold" },
+        { t: "  controls: W/S or ↑/↓ to move", c: "dim" },
+        { t: "  press Q to quit", c: "dim" },
+        { t: "" },
+      ]);
+
+      const gameCanvas = document.createElement("canvas");
+      gameCanvas.width = 400; gameCanvas.height = 220;
+      gameCanvas.style.cssText = "display:block;margin:8px auto;border:1px solid rgba(0,255,157,.3);border-radius:8px;background:#0a0a10;max-width:100%;";
+      body.appendChild(gameCanvas);
+      body.scrollTop = body.scrollHeight;
+
+      const gc = gameCanvas.getContext("2d");
+      const W = 400, H = 220, PAD_H = 50, PAD_W = 6, BALL = 5;
+      let p1y = H/2 - PAD_H/2, p2y = H/2 - PAD_H/2;
+      let bx = W/2, by = H/2, bdx = 3, bdy = 2;
+      let s1 = 0, s2 = 0;
+      const keys = {};
+      const MAX_SCORE = 5;
+
+      function keyDown(e) { keys[e.key] = true; if(['w','s','ArrowUp','ArrowDown','q'].includes(e.key)) e.preventDefault(); }
+      function keyUp(e) { keys[e.key] = false; }
+      document.addEventListener("keydown", keyDown);
+      document.addEventListener("keyup", keyUp);
+
+      function tick() {
+        /* player input */
+        if (keys['w'] || keys['ArrowUp']) p1y = Math.max(0, p1y - 4);
+        if (keys['s'] || keys['ArrowDown']) p1y = Math.min(H - PAD_H, p1y + 4);
+
+        /* quit */
+        if (keys['q']) { endPong("you quit. gg."); return; }
+
+        /* AI */
+        const aiCenter = p2y + PAD_H / 2;
+        if (aiCenter < by - 10) p2y += 2.8;
+        else if (aiCenter > by + 10) p2y -= 2.8;
+        p2y = Math.max(0, Math.min(H - PAD_H, p2y));
+
+        /* ball */
+        bx += bdx; by += bdy;
+        if (by <= BALL || by >= H - BALL) bdy *= -1;
+
+        /* paddle collision */
+        if (bx - BALL <= PAD_W + 12 && by >= p1y && by <= p1y + PAD_H && bdx < 0) {
+          bdx = Math.abs(bdx) * 1.05;
+          bdy += (by - (p1y + PAD_H/2)) * 0.1;
+        }
+        if (bx + BALL >= W - PAD_W - 12 && by >= p2y && by <= p2y + PAD_H && bdx > 0) {
+          bdx = -Math.abs(bdx) * 1.05;
+          bdy += (by - (p2y + PAD_H/2)) * 0.1;
+        }
+
+        /* speed cap */
+        bdx = Math.max(-8, Math.min(8, bdx));
+        bdy = Math.max(-6, Math.min(6, bdy));
+
+        /* score */
+        if (bx < 0) { s2++; resetBall(); }
+        if (bx > W) { s1++; resetBall(); }
+
+        /* draw */
+        gc.fillStyle = "#0a0a10"; gc.fillRect(0, 0, W, H);
+
+        /* center line */
+        gc.setLineDash([4, 6]);
+        gc.strokeStyle = "rgba(255,255,255,.08)";
+        gc.beginPath(); gc.moveTo(W/2, 0); gc.lineTo(W/2, H); gc.stroke();
+        gc.setLineDash([]);
+
+        /* paddles */
+        gc.fillStyle = "#00ff9d";
+        gc.shadowColor = "#00ff9d"; gc.shadowBlur = 10;
+        gc.fillRect(10, p1y, PAD_W, PAD_H);
+        gc.fillStyle = "#7c5cff";
+        gc.shadowColor = "#7c5cff";
+        gc.fillRect(W - 10 - PAD_W, p2y, PAD_W, PAD_H);
+        gc.shadowBlur = 0;
+
+        /* ball */
+        gc.fillStyle = "#fff";
+        gc.shadowColor = "#fff"; gc.shadowBlur = 8;
+        gc.beginPath(); gc.arc(bx, by, BALL, 0, Math.PI*2); gc.fill();
+        gc.shadowBlur = 0;
+
+        /* scores */
+        gc.font = "bold 28px 'JetBrains Mono', monospace";
+        gc.fillStyle = "rgba(0,255,157,.4)"; gc.textAlign = "center";
+        gc.fillText(s1, W/2 - 40, 38);
+        gc.fillStyle = "rgba(124,92,255,.4)";
+        gc.fillText(s2, W/2 + 40, 38);
+
+        if (s1 >= MAX_SCORE) { endPong("you win! 🎉"); return; }
+        if (s2 >= MAX_SCORE) { endPong("CPU wins! better luck next time."); return; }
+
+        pongAnim = requestAnimationFrame(tick);
+      }
+
+      function resetBall() {
+        bx = W/2; by = H/2;
+        bdx = (Math.random() > .5 ? 3 : -3);
+        bdy = (Math.random() - .5) * 4;
+      }
+
+      let pongAnim;
+      function endPong(msg) {
+        cancelAnimationFrame(pongAnim);
+        document.removeEventListener("keydown", keyDown);
+        document.removeEventListener("keyup", keyUp);
+        addLines([{ t: "" }, { t: `  ${msg}  final: ${s1} - ${s2}`, c: "green bold" }, { t: "" }]);
+        gameActive = false;
+        prompt();
+      }
+
+      pongAnim = requestAnimationFrame(tick);
+    }
+
+    /* ======================== SNAKE ======================== */
+    function startSnake() {
+      gameActive = true;
+      addLines([
+        { t: "" },
+        { t: "🐍 SNAKE — eat the food, don't hit yourself!", c: "green bold" },
+        { t: "  controls: WASD or arrow keys", c: "dim" },
+        { t: "  press Q to quit", c: "dim" },
+        { t: "" },
+      ]);
+
+      const gameCanvas = document.createElement("canvas");
+      const COLS = 25, ROWS = 18, CELL = 14;
+      gameCanvas.width = COLS * CELL; gameCanvas.height = ROWS * CELL;
+      gameCanvas.style.cssText = "display:block;margin:8px auto;border:1px solid rgba(0,255,157,.3);border-radius:8px;background:#0a0a10;max-width:100%;";
+      body.appendChild(gameCanvas);
+      body.scrollTop = body.scrollHeight;
+
+      const gc = gameCanvas.getContext("2d");
+      let snake = [{ x: 12, y: 9 }, { x: 11, y: 9 }, { x: 10, y: 9 }];
+      let dir = { x: 1, y: 0 }, nextDir = { x: 1, y: 0 };
+      let food = spawnFood();
+      let score = 0, alive = true, snakeAnim;
+
+      function spawnFood() {
+        let f;
+        do { f = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
+        while (snake.some(s => s.x === f.x && s.y === f.y));
+        return f;
+      }
+
+      function keyHandler(e) {
+        const map = {
+          'ArrowUp': {x:0,y:-1}, 'w': {x:0,y:-1},
+          'ArrowDown': {x:0,y:1}, 's': {x:0,y:1},
+          'ArrowLeft': {x:-1,y:0}, 'a': {x:-1,y:0},
+          'ArrowRight': {x:1,y:0}, 'd': {x:1,y:0},
+        };
+        if (e.key === 'q') { alive = false; return; }
+        const nd = map[e.key];
+        if (nd && !(nd.x === -dir.x && nd.y === -dir.y)) {
+          nextDir = nd;
+          e.preventDefault();
+        }
+        if (['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+      }
+      document.addEventListener("keydown", keyHandler);
+
+      let lastTick = 0;
+      const SPEED = 110;
+
+      function tick(ts) {
+        if (!alive) { endSnake(); return; }
+        if (ts - lastTick < SPEED) { snakeAnim = requestAnimationFrame(tick); return; }
+        lastTick = ts;
+        dir = nextDir;
+
+        const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+        /* wall wrap */
+        if (head.x < 0) head.x = COLS - 1;
+        if (head.x >= COLS) head.x = 0;
+        if (head.y < 0) head.y = ROWS - 1;
+        if (head.y >= ROWS) head.y = 0;
+
+        /* self collision */
+        if (snake.some(s => s.x === head.x && s.y === head.y)) { alive = false; endSnake(); return; }
+
+        snake.unshift(head);
+        if (head.x === food.x && head.y === food.y) {
+          score++;
+          food = spawnFood();
+        } else {
+          snake.pop();
+        }
+
+        draw();
+        snakeAnim = requestAnimationFrame(tick);
+      }
+
+      function draw() {
+        gc.fillStyle = "#0a0a10"; gc.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+        /* grid dots */
+        gc.fillStyle = "rgba(255,255,255,.03)";
+        for (let x = 0; x < COLS; x++) for (let y = 0; y < ROWS; y++) {
+          gc.fillRect(x * CELL + CELL/2, y * CELL + CELL/2, 1, 1);
+        }
+
+        /* food */
+        gc.fillStyle = "#ff3366";
+        gc.shadowColor = "#ff3366"; gc.shadowBlur = 8;
+        gc.beginPath();
+        gc.arc(food.x * CELL + CELL/2, food.y * CELL + CELL/2, CELL/2 - 1, 0, Math.PI*2);
+        gc.fill();
+        gc.shadowBlur = 0;
+
+        /* snake */
+        for (let i = 0; i < snake.length; i++) {
+          const s = snake[i];
+          const alpha = 1 - (i / snake.length) * .5;
+          gc.fillStyle = i === 0 ? "#00ff9d" : `rgba(0,255,157,${alpha})`;
+          if (i === 0) { gc.shadowColor = "#00ff9d"; gc.shadowBlur = 6; }
+          gc.fillRect(s.x * CELL + 1, s.y * CELL + 1, CELL - 2, CELL - 2);
+          gc.shadowBlur = 0;
+        }
+
+        /* score */
+        gc.font = "bold 12px 'JetBrains Mono', monospace";
+        gc.fillStyle = "rgba(255,255,255,.3)";
+        gc.textAlign = "right";
+        gc.fillText(`score: ${score}`, gameCanvas.width - 8, 16);
+        gc.textAlign = "left";
+      }
+
+      function endSnake() {
+        cancelAnimationFrame(snakeAnim);
+        document.removeEventListener("keydown", keyHandler);
+        addLines([{ t: "" }, { t: `  game over! final score: ${score}`, c: "green bold" }, { t: "" }]);
+        gameActive = false;
+        prompt();
+      }
+
+      snakeAnim = requestAnimationFrame(tick);
+    }
+
+    /* ======================== MATRIX RAIN ======================== */
     let mCanvas, mCtx, mAnim, mOn = false;
     const mChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF";
 
