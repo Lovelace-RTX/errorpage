@@ -384,15 +384,12 @@
     }
     .steps-list li {
       counter-increment: step;
-      display: grid;
-      grid-template-columns: 32px 1fr;
-      gap: 14px;
-      padding: 16px 0;
+      padding: 16px 0 16px 46px;
       border-bottom: 1px solid var(--border);
       font-size: 14px;
       color: var(--text-mid);
-      line-height: 1.6;
-      align-items: start;
+      line-height: 1.7;
+      position: relative;
     }
     .steps-list li:last-child { border-bottom: none; }
     .steps-list li::before {
@@ -408,7 +405,9 @@
       justify-content: center;
       border-radius: 8px;
       background: var(--green-dim);
-      flex-shrink: 0;
+      position: absolute;
+      left: 0;
+      top: 16px;
     }
 
     .code {
@@ -420,6 +419,10 @@
       border-radius: 6px;
       color: var(--accent);
       white-space: nowrap;
+      display: inline;
+    }
+    @media (max-width: 500px) {
+      .code { white-space: normal; word-break: break-all; }
     }
 
     /* === HEALTH PANEL === */
