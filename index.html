@@ -51,11 +51,10 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* === BACKGROUND ATMOSPHERE === */
+    /* === BACKGROUND === */
     .atmosphere {
       position: fixed; inset: 0;
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
     .atmosphere::before {
       content: "";
@@ -74,16 +73,20 @@
       animation: drift2 25s ease-in-out infinite;
     }
     @keyframes drift1 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(80px, 40px) scale(1.1); }
-      66% { transform: translate(-40px, 80px) scale(0.95); }
+      0%, 100% { transform: translate(0,0) scale(1); }
+      33% { transform: translate(80px,40px) scale(1.1); }
+      66% { transform: translate(-40px,80px) scale(.95); }
     }
     @keyframes drift2 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(-60px, -40px) scale(1.08); }
+      0%, 100% { transform: translate(0,0) scale(1); }
+      50% { transform: translate(-60px,-40px) scale(1.08); }
     }
 
-    /* grid overlay */
+    #particles {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+    }
+
     .grid-bg {
       position: fixed; inset: 0;
       pointer-events: none;
@@ -95,25 +98,16 @@
       mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
     }
 
-    /* scan line effect */
     .scanline {
       position: fixed; inset: 0;
-      pointer-events: none;
-      z-index: 9999;
+      pointer-events: none; z-index: 9999;
       opacity: .018;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(255,255,255,.08) 2px,
-        rgba(255,255,255,.08) 4px
-      );
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.08) 2px, rgba(255,255,255,.08) 4px);
     }
 
     /* === LAYOUT === */
     .container {
-      position: relative;
-      z-index: 1;
+      position: relative; z-index: 1;
       max-width: 1000px;
       margin: 0 auto;
       padding: 40px 20px 60px;
@@ -145,7 +139,16 @@
       background: var(--surface);
       border: 1px solid var(--border-bright);
       overflow: hidden;
+      cursor: pointer;
+      transition: all .2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
+    .logo-mark:hover {
+      border-color: var(--green-mid);
+      background: var(--green-dim);
+    }
+    .logo-mark:active { transform: scale(.95); }
     .logo-mark::before {
       content: "";
       position: absolute;
@@ -161,8 +164,7 @@
       font-size: 22px;
       color: var(--text);
       opacity: .9;
-      position: relative;
-      z-index: 1;
+      position: relative; z-index: 1;
     }
     @keyframes logoPulse {
       0%, 100% { opacity: .3; transform: scale(.8); }
@@ -176,9 +178,7 @@
       letter-spacing: 2px;
       text-transform: lowercase;
     }
-    .brand-text h1 span {
-      color: var(--accent);
-    }
+    .brand-text h1 span { color: var(--accent); }
     .brand-sub {
       font-size: 12px;
       color: var(--text-dim);
@@ -187,7 +187,7 @@
       margin-top: 2px;
     }
 
-    /* Status indicator */
+    /* Status chip */
     .status-chip {
       display: flex;
       align-items: center;
@@ -203,6 +203,7 @@
       color: var(--text-mid);
       transition: all .3s ease;
       user-select: none;
+      white-space: nowrap;
     }
     .status-dot {
       width: 8px; height: 8px;
@@ -210,15 +211,14 @@
       background: var(--amber);
       transition: all .3s ease;
       position: relative;
+      flex-shrink: 0;
     }
     .status-dot::after {
       content: "";
-      position: absolute;
-      inset: -4px;
+      position: absolute; inset: -4px;
       border-radius: 50%;
       border: 1.5px solid currentColor;
       opacity: 0;
-      animation: none;
     }
 
     .status-chip.online {
@@ -235,7 +235,6 @@
       animation: ringPulse 2s ease-in-out infinite;
       opacity: 1;
     }
-
     .status-chip.offline {
       border-color: var(--red-mid);
       background: var(--red-dim);
@@ -250,7 +249,6 @@
       animation: ringPulse 1.4s ease-in-out infinite;
       opacity: 1;
     }
-
     @keyframes ringPulse {
       0% { transform: scale(1); opacity: .6; }
       100% { transform: scale(2.5); opacity: 0; }
@@ -277,8 +275,6 @@
       border-color: var(--border-bright);
       background: var(--surface-hover);
     }
-
-    /* subtle top-edge glow on cards */
     .card::before {
       content: "";
       position: absolute;
@@ -317,10 +313,7 @@
       color: var(--text-dim);
       margin-bottom: 16px;
     }
-    .card-label .icon {
-      font-size: 14px;
-      opacity: .6;
-    }
+    .card-label .icon { font-size: 14px; opacity: .6; }
 
     .card h2 {
       font-family: var(--sans);
@@ -338,12 +331,7 @@
     }
 
     /* === BUTTONS === */
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
     .btn {
       display: inline-flex;
       align-items: center;
@@ -365,8 +353,7 @@
     }
     .btn::before {
       content: "";
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
       opacity: 0;
       transition: opacity .15s ease;
@@ -387,14 +374,9 @@
       border-color: rgba(255,255,255,.2);
     }
     .btn.ghost::before { display: none; }
+    .btn.disabled { opacity: .3; pointer-events: none; filter: grayscale(.5); }
 
-    .btn.disabled {
-      opacity: .3;
-      pointer-events: none;
-      filter: grayscale(.5);
-    }
-
-    /* === STEPS === */
+    /* === STEPS (FIXED) === */
     .steps-list {
       list-style: none;
       counter-reset: step;
@@ -402,14 +384,15 @@
     }
     .steps-list li {
       counter-increment: step;
-      display: flex;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: 32px 1fr;
       gap: 14px;
-      padding: 12px 0;
+      padding: 16px 0;
       border-bottom: 1px solid var(--border);
       font-size: 14px;
       color: var(--text-mid);
-      line-height: 1.5;
+      line-height: 1.6;
+      align-items: start;
     }
     .steps-list li:last-child { border-bottom: none; }
     .steps-list li::before {
@@ -419,15 +402,13 @@
       font-weight: 700;
       color: var(--accent);
       opacity: .7;
-      flex-shrink: 0;
-      width: 22px;
-      height: 22px;
+      width: 28px; height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 6px;
+      border-radius: 8px;
       background: var(--green-dim);
-      margin-top: 1px;
+      flex-shrink: 0;
     }
 
     .code {
@@ -442,17 +423,14 @@
     }
 
     /* === HEALTH PANEL === */
-    .health-grid {
-      display: grid;
-      gap: 0;
-      margin-top: 4px;
-    }
+    .health-grid { display: grid; gap: 0; margin-top: 4px; }
     .health-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 14px 0;
       border-bottom: 1px solid var(--border);
+      gap: 12px;
     }
     .health-row:last-child { border-bottom: none; }
     .health-key {
@@ -461,12 +439,14 @@
       color: var(--text-dim);
       letter-spacing: .5px;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
     .health-val {
       font-family: var(--mono);
       font-size: 13px;
       color: var(--text);
       text-align: right;
+      word-break: break-word;
     }
 
     .status-badge {
@@ -510,6 +490,8 @@
       font-family: var(--mono);
       font-size: 11px;
       color: var(--text-dim);
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .json-link {
       color: var(--text-dim);
@@ -519,11 +501,126 @@
       background: var(--surface);
       border: 1px solid var(--border);
       transition: all .2s ease;
+      flex-shrink: 0;
     }
     .json-link:hover {
       color: var(--text);
       border-color: var(--border-bright);
       background: var(--surface-hover);
+    }
+
+    /* === TERMINAL EASTER EGG === */
+    .terminal-overlay {
+      position: fixed; inset: 0;
+      z-index: 10000;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    .terminal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .terminal {
+      width: min(620px, 100%);
+      max-height: 80vh;
+      background: #0a0a10;
+      border: 1px solid var(--green-mid);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 0 80px rgba(0,255,157,.06), 0 40px 80px rgba(0,0,0,.5);
+      transform: scale(.95) translateY(10px);
+      transition: transform .3s ease;
+    }
+    .terminal-overlay.open .terminal {
+      transform: scale(1) translateY(0);
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.r { background: #ff5f57; }
+    .terminal-dot.y { background: #febc2e; }
+    .terminal-dot.g { background: #28c840; }
+    .terminal-title {
+      flex: 1;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: .5px;
+    }
+    .terminal-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0 4px;
+      transition: color .2s;
+      font-family: var(--mono);
+    }
+    .terminal-close:hover { color: var(--text); }
+
+    .terminal-body {
+      padding: 18px;
+      min-height: 300px;
+      max-height: calc(80vh - 50px);
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-mid);
+    }
+    .terminal-body::-webkit-scrollbar { width: 4px; }
+    .terminal-body::-webkit-scrollbar-track { background: transparent; }
+    .terminal-body::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+
+    .term-line { margin-bottom: 2px; white-space: pre-wrap; word-break: break-word; }
+    .term-line.green { color: var(--green); }
+    .term-line.red { color: var(--red); }
+    .term-line.purple { color: var(--accent2); }
+    .term-line.dim { color: var(--text-dim); }
+    .term-line.amber { color: var(--amber); }
+    .term-line.bold { font-weight: 700; }
+    .term-line .accent { color: var(--accent); }
+
+    .term-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 4px;
+    }
+    .term-prompt {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 13px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .term-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      caret-color: var(--accent);
+      padding: 0;
     }
 
     /* === FOOTER === */
@@ -539,6 +636,8 @@
       color: var(--text-dim);
       letter-spacing: .5px;
       animation: fadeUp .6s ease .3s both;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .site-footer a {
       color: var(--text-dim);
@@ -547,13 +646,24 @@
     }
     .site-footer a:hover { color: var(--accent); }
 
-    /* === ANIMATIONS === */
+    .easter-hint {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: rgba(232,232,240,.12);
+      text-align: center;
+      margin-top: 14px;
+      letter-spacing: 1px;
+      transition: color .3s ease;
+      cursor: default;
+      user-select: none;
+    }
+    .easter-hint:hover { color: rgba(232,232,240,.35); }
+
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* === RESPONSIVE === */
     @media (max-width: 700px) {
       .container { padding: 24px 14px 40px; }
       .header { flex-direction: column; align-items: flex-start; gap: 14px; }
@@ -564,38 +674,35 @@
       .brand-text h1 { font-size: 17px; }
       .actions { flex-direction: column; }
       .btn { justify-content: center; }
-      .site-footer { flex-direction: column; gap: 8px; text-align: center; }
+      .site-footer { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
 
 <body>
   <div class="atmosphere"></div>
+  <canvas id="particles"></canvas>
   <div class="grid-bg"></div>
   <div class="scanline"></div>
 
   <div class="container">
 
-    <!-- HEADER -->
     <header class="header">
       <div class="brand">
-        <div class="logo-mark"></div>
+        <div class="logo-mark" id="logoBtn" title="click me :)"></div>
         <div class="brand-text">
           <h1>core<span>watcher</span></h1>
           <div class="brand-sub">private homelab · tailnet only</div>
         </div>
       </div>
-
       <div class="status-chip" id="healthChip">
         <span class="status-dot" id="healthDot"></span>
         <span id="healthText">checking…</span>
       </div>
     </header>
 
-    <!-- BENTO GRID -->
     <div class="bento">
 
-      <!-- ACCESS CARD -->
       <div class="card accent-green">
         <div class="card-label"><span class="icon">◈</span> access</div>
         <h2>Connect to the lab</h2>
@@ -603,28 +710,17 @@
           All services are private and routed through Tailscale.
           Connect to the tailnet to reach the control center and internal apps.
         </p>
-
         <div class="actions">
-          <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">
-            Tailscale login ↗
-          </a>
-          <a class="btn ghost" id="homeBtn" href="https://home.corewatcher.com" target="_blank" rel="noopener">
-            Control center
-          </a>
-          <a class="btn ghost" href="https://tailscale.com/download" target="_blank" rel="noopener">
-            Download client
-          </a>
+          <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">Tailscale login ↗</a>
+          <a class="btn ghost" id="homeBtn" href="https://home.corewatcher.com" target="_blank" rel="noopener">Control center</a>
+          <a class="btn ghost" href="https://tailscale.com/download" target="_blank" rel="noopener">Download client</a>
         </div>
       </div>
 
-      <!-- HEALTH CARD -->
       <div class="card accent-purple">
         <div class="card-label"><span class="icon">◉</span> server health</div>
         <h2>Live status</h2>
-        <p class="card-desc">
-          Auto-updated by the server. If updates stop, assume it's unreachable.
-        </p>
-
+        <p class="card-desc">Auto-updated by the server. If updates stop, assume it's unreachable.</p>
         <div class="health-grid">
           <div class="health-row">
             <span class="health-key">Status</span>
@@ -639,20 +735,16 @@
             <span class="health-val" id="message">—</span>
           </div>
         </div>
-
         <div class="hint-text" id="hint"></div>
-
         <div class="card-footer">
           <span id="ageLine">—</span>
           <a class="json-link" href="./health.json" target="_blank" rel="noopener">health.json</a>
         </div>
       </div>
 
-      <!-- SETUP STEPS CARD (full width) -->
       <div class="card full">
         <div class="card-label"><span class="icon">▹</span> quick setup</div>
         <h2>Get connected in 4 steps</h2>
-
         <ol class="steps-list">
           <li>Install <strong>Tailscale</strong> on your device — available for all major platforms.</li>
           <li>Sign in at <span class="code">login.tailscale.com</span> with your authorized account.</li>
@@ -663,79 +755,59 @@
 
     </div>
 
-    <!-- FOOTER -->
     <footer class="site-footer">
       <span>corewatcher · homelab portal</span>
       <span>tailscale-gated · <a href="./health.json">status feed</a></span>
     </footer>
+    <div class="easter-hint">try clicking the logo</div>
+  </div>
 
+  <!-- TERMINAL -->
+  <div class="terminal-overlay" id="termOverlay">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot r"></span>
+        <span class="terminal-dot y"></span>
+        <span class="terminal-dot g"></span>
+        <span class="terminal-title">corewatcher-sh</span>
+        <button class="terminal-close" id="termClose">×</button>
+      </div>
+      <div class="terminal-body" id="termBody"></div>
+    </div>
   </div>
 
 <script>
+  /* ======================== HEALTH CHECK ======================== */
   const HEALTH_URL = "./health.json?t=" + Date.now();
   const STALE_MINUTES = 6;
-
   const el = id => document.getElementById(id);
 
   function setStatus(state, text) {
     const chip = el("healthChip");
     const homeBtn = el("homeBtn");
-
     el("healthText").textContent = text;
     chip.className = "status-chip";
-
-    if (state === "up") {
-      chip.classList.add("online");
-      homeBtn && homeBtn.classList.remove("disabled");
-    } else if (state === "down") {
-      chip.classList.add("offline");
-      homeBtn && homeBtn.classList.add("disabled");
-    }
+    if (state === "up") { chip.classList.add("online"); homeBtn && homeBtn.classList.remove("disabled"); }
+    else if (state === "down") { chip.classList.add("offline"); homeBtn && homeBtn.classList.add("disabled"); }
   }
 
-  function fmt(ts) {
-    try { return new Date(ts).toLocaleString(); } catch { return ts; }
-  }
-
-  function minutesAgo(ts) {
-    try {
-      return Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000));
-    } catch { return null; }
-  }
+  function fmt(ts) { try { return new Date(ts).toLocaleString(); } catch { return ts; } }
+  function minutesAgo(ts) { try { return Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000)); } catch { return null; } }
 
   async function loadHealth() {
     try {
       const res = await fetch(HEALTH_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("fetch failed");
       const data = await res.json();
-
       el("lastSeen").textContent = data.last_seen ? fmt(data.last_seen) : "—";
       el("message").textContent = data.message || "—";
-
       let stale = true, ageMins = null;
-      if (data.last_seen) {
-        ageMins = minutesAgo(data.last_seen);
-        stale = ageMins === null ? true : ageMins > STALE_MINUTES;
-      }
-
+      if (data.last_seen) { ageMins = minutesAgo(data.last_seen); stale = ageMins === null ? true : ageMins > STALE_MINUTES; }
       const up = data.server === "up" && !stale;
-
-      el("statusLine").innerHTML = up
-        ? '<span class="status-badge up">● online</span>'
-        : '<span class="status-badge down">● offline</span>';
-
-      if (up) {
-        setStatus("up", "server online");
-        el("hint").textContent = "Can't reach control center? Make sure Tailscale is connected.";
-      } else {
-        setStatus("down", "server offline");
-        el("hint").textContent = "Server unreachable — check power, network, Docker, or scheduled maintenance.";
-      }
-
-      el("ageLine").textContent = ageMins === null
-        ? "last update: unknown"
-        : `last update: ${ageMins} min ago`;
-
+      el("statusLine").innerHTML = up ? '<span class="status-badge up">● online</span>' : '<span class="status-badge down">● offline</span>';
+      if (up) { setStatus("up", "server online"); el("hint").textContent = "Can't reach control center? Make sure Tailscale is connected."; }
+      else { setStatus("down", "server offline"); el("hint").textContent = "Server unreachable — check power, network, Docker, or scheduled maintenance."; }
+      el("ageLine").textContent = ageMins === null ? "last update: unknown" : `last update: ${ageMins} min ago`;
     } catch {
       setStatus("down", "server offline");
       el("statusLine").innerHTML = '<span class="status-badge down">● offline</span>';
@@ -745,8 +817,286 @@
       el("ageLine").textContent = "last update: —";
     }
   }
-
   loadHealth();
+
+  /* ======================== PARTICLES ======================== */
+  (() => {
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d");
+    let W, H, pts = [];
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener("resize", resize);
+    const N = Math.min(45, Math.floor(window.innerWidth / 30));
+    for (let i = 0; i < N; i++) {
+      pts.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.4 + .4,
+        dx: (Math.random() - .5) * .22,
+        dy: (Math.random() - .5) * .22,
+        o: Math.random() * .25 + .05,
+        c: ["0,255,157", "124,92,255", "232,232,240"][Math.floor(Math.random() * 3)]
+      });
+    }
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of pts) {
+        p.x += p.dx; p.y += p.dy;
+        if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
+        if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.c},${p.o})`; ctx.fill();
+      }
+      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+        const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
+        if (d < 110) {
+          ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = `rgba(255,255,255,${.018 * (1 - d / 110)})`; ctx.lineWidth = .5; ctx.stroke();
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  /* ======================== TERMINAL ======================== */
+  (() => {
+    const overlay = el("termOverlay");
+    const body = el("termBody");
+    let inputEl = null;
+
+    const MOTD = [
+      { t: "╔══════════════════════════════════════╗", c: "green" },
+      { t: "║     corewatcher terminal v1.0.0      ║", c: "green bold" },
+      { t: "╚══════════════════════════════════════╝", c: "green" },
+      { t: "" },
+      { t: "  welcome back, davide.", c: "purple" },
+      { t: "  type 'help' to see available commands.", c: "dim" },
+      { t: "" },
+    ];
+
+    const ASCII = [
+      "        ___        ",
+      "       /   \\       ",
+      "      / ⬡   \\      ",
+      "     /   |    \\     ",
+      "    /    |     \\    ",
+      "   /_____|______\\   ",
+      "   \\     |      /   ",
+      "    \\    |     /    ",
+      "     \\   |    /     ",
+      "      \\     /      ",
+      "       \\___/       ",
+    ];
+
+    const INFO = [
+      "", "  davide@corewatcher", "  ─────────────────",
+      "  os      ubuntu server 24.04",
+      "  cpu     i7-12800H (14c/20t)",
+      "  ram     64 GB DDR5",
+      "  gpu     RTX A2000 4GB",
+      "  disk    6 TB (NVMe + SSD)",
+      "  net     tailscale mesh vpn",
+      "  dns     pi-hole (custom)",
+      "  proxy   caddy + cloudflare",
+    ];
+
+    const QUOTES = [
+      "\"Any sufficiently advanced homelab is indistinguishable from magic.\"",
+      "\"It works on my machine\" — every developer, ever",
+      "\"Have you tried turning it off and on again?\" — the IT crowd",
+      "\"There's no place like 127.0.0.1\"",
+      "\"sudo make me a sandwich\" — xkcd",
+      "\"It's not a bug, it's a feature\"",
+      "\"Works in prod, don't touch it\" — ancient proverb",
+      "\"The cloud is just someone else's computer\"",
+      "\"rm -rf / speedruns any%\" — chaotic evil",
+      "\"I mass mass mass destruction\" — Persona 3 Reload enjoyer",
+    ];
+
+    const SERVICES = [
+      "jellyfin      ✦  media server       jelly.corewatcher.com",
+      "nextcloud     ✦  file sync          cloud.corewatcher.com",
+      "homarr        ✦  control center     home.corewatcher.com",
+      "pi-hole       ✦  dns ad-block       dns.corewatcher.com",
+      "uptime-kuma   ✦  monitoring         status.corewatcher.com",
+      "immich        ✦  photos             photos.corewatcher.com",
+      "caddy         ✦  reverse proxy      (internal)",
+      "tailscale     ✦  vpn mesh           (internal)",
+    ];
+
+    const cmds = {
+      help: () => [
+        { t: "available commands:", c: "green bold" }, { t: "" },
+        { t: "  help         show this message" },
+        { t: "  status       server status" },
+        { t: "  services     list running services" },
+        { t: "  neofetch     system info" },
+        { t: "  about        about corewatcher" },
+        { t: "  quote        random tech quote" },
+        { t: "  uptime       server uptime" },
+        { t: "  whoami       who are you?" },
+        { t: "  ping         ping the void" },
+        { t: "  matrix       ????", c: "dim" },
+        { t: "  clear        clear terminal" },
+        { t: "  exit         close terminal" },
+        { t: "" },
+      ],
+      status: () => {
+        const on = el("healthChip").classList.contains("online");
+        return [
+          { t: `server: ${on ? "● ONLINE" : "● OFFLINE"}`, c: on ? "green bold" : "red bold" },
+          { t: `checked: ${el("ageLine").textContent}`, c: "dim" },
+        ];
+      },
+      services: () => {
+        const l = [{ t: "active services on corewatcher:", c: "green bold" }, { t: "" }];
+        SERVICES.forEach(s => l.push({ t: "  " + s }));
+        l.push({ t: "" });
+        return l;
+      },
+      neofetch: () => {
+        const l = [];
+        const max = Math.max(ASCII.length, INFO.length);
+        for (let i = 0; i < max; i++) {
+          const a = (ASCII[i] || "").padEnd(22);
+          const b = INFO[i] || "";
+          l.push({ t: a + b, c: "green" });
+        }
+        l.push({ t: "" });
+        return l;
+      },
+      about: () => [
+        { t: "corewatcher", c: "green bold" },
+        { t: "a private homelab portal built by davide." },
+        { t: "self-hosted on a repurposed work laptop running" },
+        { t: "ubuntu server, docker, and way too many containers." },
+        { t: "" },
+        { t: "domain: corewatcher.com", c: "dim" },
+        { t: "access: tailscale VPN only", c: "dim" },
+        { t: "" },
+      ],
+      quote: () => [{ t: "" }, { t: QUOTES[Math.floor(Math.random() * QUOTES.length)], c: "purple" }, { t: "" }],
+      uptime: () => {
+        const d = Math.floor(Math.random() * 60) + 12, h = Math.floor(Math.random() * 24);
+        return [{ t: `up ${d} days, ${h} hours (probably)`, c: "green" }, { t: "this is vibes-based, not real telemetry", c: "dim" }];
+      },
+      whoami: () => [
+        { t: "davide", c: "green bold" },
+        { t: "2nd-year IT apprentice (Informatiker Plattformentwickler)" },
+        { t: "zurich, switzerland", c: "dim" },
+        { t: "" },
+        { t: "skills: infrastructure, docker, networking, breaking things" },
+        { t: "hobbies: homelab, anime, persona, cooking, learning japanese" },
+        { t: "" },
+      ],
+      ping: () => {
+        const ms = Math.floor(Math.random() * 12) + 1;
+        return [
+          { t: `PING corewatcher.local (100.x.x.x): 56 data bytes`, c: "dim" },
+          { t: `64 bytes: icmp_seq=0 ttl=64 time=${ms}.${Math.floor(Math.random()*99)}ms`, c: "green" },
+          { t: `64 bytes: icmp_seq=1 ttl=64 time=${ms + 1}.${Math.floor(Math.random()*99)}ms`, c: "green" },
+          { t: `64 bytes: icmp_seq=2 ttl=64 time=${ms}.${Math.floor(Math.random()*99)}ms`, c: "green" },
+          { t: `--- corewatcher.local ping statistics ---`, c: "dim" },
+          { t: `3 packets transmitted, 3 received, 0% packet loss`, c: "" },
+        ];
+      },
+      matrix: () => { startMatrix(); return [{ t: "entering the matrix... (click to exit)", c: "green" }]; },
+      clear: () => "CLEAR",
+      exit: () => "EXIT",
+    };
+
+    function addLines(lines) {
+      for (const l of lines) {
+        const d = document.createElement("div");
+        d.className = "term-line" + (l.c ? " " + l.c : "");
+        d.textContent = l.t;
+        body.insertBefore(d, body.lastElementChild);
+      }
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function prompt() {
+      const row = document.createElement("div");
+      row.className = "term-input-row";
+      row.innerHTML = `<span class="term-prompt">❯&nbsp;</span><input class="term-input" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">`;
+      body.appendChild(row);
+      inputEl = row.querySelector(".term-input");
+      inputEl.focus();
+      inputEl.addEventListener("keydown", onKey);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function onKey(e) {
+      if (e.key !== "Enter") return;
+      const val = inputEl.value.trim().toLowerCase();
+      inputEl.removeEventListener("keydown", onKey);
+      inputEl.disabled = true;
+
+      const line = document.createElement("div");
+      line.className = "term-line";
+      line.innerHTML = `<span class="accent">❯</span> ${val || " "}`;
+      inputEl.parentElement.replaceWith(line);
+
+      if (!val) { prompt(); return; }
+
+      const fn = cmds[val];
+      if (fn) {
+        const r = fn();
+        if (r === "CLEAR") { body.innerHTML = ""; prompt(); return; }
+        if (r === "EXIT") { close(); return; }
+        addLines(r);
+      } else {
+        addLines([{ t: `command not found: ${val}. try 'help'.`, c: "red" }]);
+      }
+      prompt();
+    }
+
+    function open() { overlay.classList.add("open"); body.innerHTML = ""; addLines(MOTD); prompt(); }
+    function close() { overlay.classList.remove("open"); stopMatrix(); }
+
+    el("logoBtn").addEventListener("click", open);
+    el("termClose").addEventListener("click", close);
+    overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && overlay.classList.contains("open")) close(); });
+
+    /* MATRIX RAIN */
+    let mCanvas, mCtx, mAnim, mOn = false;
+    const mChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF";
+
+    function startMatrix() {
+      if (mOn) return; mOn = true;
+      mCanvas = document.createElement("canvas");
+      mCanvas.style.cssText = "position:fixed;inset:0;z-index:9998;cursor:pointer;";
+      document.body.appendChild(mCanvas);
+      mCtx = mCanvas.getContext("2d");
+      mCanvas.width = window.innerWidth; mCanvas.height = window.innerHeight;
+      const cols = Math.floor(mCanvas.width / 16);
+      const drops = Array(cols).fill(1);
+      function draw() {
+        mCtx.fillStyle = "rgba(5,5,8,.06)";
+        mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
+        mCtx.fillStyle = "#00ff9d";
+        mCtx.font = "14px 'JetBrains Mono', monospace";
+        for (let i = 0; i < drops.length; i++) {
+          mCtx.globalAlpha = Math.random() * .5 + .4;
+          mCtx.fillText(mChars[Math.floor(Math.random() * mChars.length)], i * 16, drops[i] * 16);
+          if (drops[i] * 16 > mCanvas.height && Math.random() > .975) drops[i] = 0;
+          drops[i]++;
+        }
+        mCtx.globalAlpha = 1;
+        mAnim = requestAnimationFrame(draw);
+      }
+      draw();
+      mCanvas.addEventListener("click", stopMatrix);
+    }
+
+    function stopMatrix() {
+      if (!mOn) return; mOn = false;
+      cancelAnimationFrame(mAnim);
+      if (mCanvas) { mCanvas.remove(); mCanvas = null; }
+    }
+  })();
 </script>
 </body>
 </html>
