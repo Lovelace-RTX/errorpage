@@ -4,596 +4,745 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>corewatcher</title>
-  <meta name="theme-color" content="#07070c" />
+  <meta name="theme-color" content="#050508" />
   <meta name="description" content="corewatcher portal — private homelab access via Tailscale + live server heartbeat." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#07070c;
-      --card:rgba(255,255,255,.05);
-      --border:rgba(255,255,255,.11);
-      --text:#f2f2fb;
-      --muted:rgba(242,242,251,.72);
+    :root {
+      --bg: #050508;
+      --surface: rgba(255,255,255,.025);
+      --surface-hover: rgba(255,255,255,.045);
+      --border: rgba(255,255,255,.06);
+      --border-bright: rgba(255,255,255,.12);
+      --text: #e8e8f0;
+      --text-dim: rgba(232,232,240,.5);
+      --text-mid: rgba(232,232,240,.7);
 
-      --good:#38f29b;
-      --bad:#ff4d6d;
-      --warn:#ffd166;
+      --green: #00ff9d;
+      --green-dim: rgba(0,255,157,.08);
+      --green-mid: rgba(0,255,157,.2);
+      --red: #ff3366;
+      --red-dim: rgba(255,51,102,.08);
+      --red-mid: rgba(255,51,102,.2);
+      --amber: #ffaa00;
 
-      --accent:#ff2d55;
-      --accent2:#8b5cf6;
-      --accent3:#22d3ee;
+      --accent: #00ff9d;
+      --accent2: #7c5cff;
+      --accent3: #ff3366;
 
-      --shadow: 0 18px 55px rgba(0,0,0,.45);
-      --radius: 22px;
-    }
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+      --sans: 'Outfit', sans-serif;
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      color:var(--text);
-      background: var(--bg);
-      overflow-x:hidden;
-    }
-
-    /* Animated background aura */
-    .bg{
-      position:fixed; inset:0;
-      background:
-        radial-gradient(900px 520px at 18% 10%, rgba(255,45,85,.20), transparent 60%),
-        radial-gradient(900px 520px at 88% 25%, rgba(139,92,246,.16), transparent 60%),
-        radial-gradient(1000px 620px at 50% 100%, rgba(34,211,238,.10), transparent 60%),
-        radial-gradient(1100px 800px at 50% 50%, rgba(255,255,255,.04), transparent 55%);
-      filter: saturate(1.15);
-      pointer-events:none;
-    }
-    .noise{
-      position:fixed; inset:-20%;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
-      opacity:.12;
-      mix-blend-mode: overlay;
-      pointer-events:none;
-      transform: rotate(2deg);
-    }
-    .shine{
-      position:fixed; inset:0;
-      background: linear-gradient(110deg,
-        transparent 0%,
-        rgba(255,255,255,.05) 12%,
-        transparent 24%,
-        transparent 100%
-      );
-      animation: sweep 10s linear infinite;
-      pointer-events:none;
-      opacity:.35;
-    }
-    @keyframes sweep{
-      0%{ transform: translateX(-60%); }
-      100%{ transform: translateX(120%); }
+      --radius: 16px;
+      --radius-sm: 10px;
     }
 
-    .wrap{
-      position:relative;
-      width:min(1080px, 100%);
-      margin:0 auto;
-      padding: 28px 18px 34px;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
 
-    /* Top header */
-    .top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom: 18px;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      min-width: 260px;
-    }
-    .logo{
-      width:46px; height:46px;
-      border-radius:16px;
-      background:
-        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.65), transparent 55%),
-        linear-gradient(135deg, rgba(255,45,85,.95), rgba(139,92,246,.35));
-      border: 1px solid rgba(255,255,255,.16);
-      box-shadow: 0 18px 48px rgba(255,45,85,.16);
-      position:relative;
-      overflow:hidden;
-    }
-    .logo::after{
-      content:"";
-      position:absolute; inset:-60%;
-      background: conic-gradient(from 140deg, transparent, rgba(255,255,255,.25), transparent 60%);
-      animation: spin 7.5s linear infinite;
-      opacity:.65;
-    }
-    @keyframes spin{
-      to{ transform: rotate(360deg); }
-    }
-    .brand h1{
-      font-size: 22px;
-      margin:0;
-      letter-spacing:.2px;
-    }
-    .subtitle{
-      margin-top:2px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    /* Status pill */
-    .pill{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid var(--border);
-      box-shadow: 0 10px 28px rgba(0,0,0,.22);
-      white-space:nowrap;
-      user-select:none;
-    }
-    .dot{
-      width:10px; height:10px;
-      border-radius:50%;
-      background: var(--warn);
-      box-shadow: 0 0 0 0 rgba(255, 209, 102, .0);
-    }
-    .pillText{
-      font-size: 13px;
-      color: rgba(242,242,251,.85);
-    }
-    .pulse-good{ animation: pulseGood 1.7s ease-in-out infinite; }
-    .pulse-bad{ animation: pulseBad 1.2s ease-in-out infinite; }
-    @keyframes pulseGood{
-      0%{ box-shadow: 0 0 0 0 rgba(56,242,155,.0); }
-      40%{ box-shadow: 0 0 0 10px rgba(56,242,155,.12); }
-      100%{ box-shadow: 0 0 0 18px rgba(56,242,155,.0); }
-    }
-    @keyframes pulseBad{
-      0%{ box-shadow: 0 0 0 0 rgba(255,77,109,.0); }
-      35%{ box-shadow: 0 0 0 11px rgba(255,77,109,.12); }
-      100%{ box-shadow: 0 0 0 20px rgba(255,77,109,.0); }
-    }
-
-    /* Cards */
-    .grid{
-      display:grid;
-      grid-template-columns: 1.25fr .75fr;
-      gap: 14px;
-    }
-    @media (max-width: 900px){
-      .grid{ grid-template-columns: 1fr; }
-      .top{ align-items:flex-start; flex-direction:column; }
-      .pill{ width: fit-content; }
-    }
-
-    .card{
-      position:relative;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px;
-      backdrop-filter: blur(12px);
-      overflow:hidden;
-    }
-    .card::before{
-      content:"";
-      position:absolute; inset:0;
-      background:
-        linear-gradient(120deg,
-          rgba(255,45,85,.18),
-          rgba(139,92,246,.10),
-          rgba(34,211,238,.08),
-          transparent 70%);
-      opacity:.32;
-      pointer-events:none;
-      transform: translateY(-35%);
-    }
-    .card::after{
-      content:"";
-      position:absolute; inset:0;
-      border-radius: var(--radius);
-      background: radial-gradient(520px 180px at 25% 0%, rgba(255,255,255,.08), transparent 65%);
-      pointer-events:none;
-      opacity:.55;
-    }
-    .card > *{ position:relative; z-index:1; }
-
-    .card h2{
-      margin:0 0 10px;
-      font-size: 18px;
-      letter-spacing:.2px;
-    }
-    .muted{
-      color: var(--muted);
-      line-height:1.55;
-      font-size: 14px;
-      margin:0 0 12px;
-    }
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 13px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.12);
-      padding: 3px 8px;
-      border-radius: 10px;
-      color: rgba(242,242,251,.92);
-      display:inline-block;
-      transform: translateY(-1px);
-    }
-
-    .btnRow{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top: 8px;
-    }
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      text-decoration:none;
-      font-weight: 760;
-      letter-spacing:.2px;
+    body {
+      min-height: 100%;
+      font-family: var(--sans);
       color: var(--text);
-      border: 1px solid rgba(255,255,255,.16);
-      background: linear-gradient(135deg, rgba(255,45,85,.30), rgba(139,92,246,.16));
-      box-shadow: 0 14px 38px rgba(255,45,85,.12);
-      transition: transform .09s ease, filter .2s ease, background .2s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
-    .btn:active{ transform: translateY(0px); filter: brightness(.98); }
-    .btn.secondary{
-      background: rgba(255,255,255,.04);
-      box-shadow: none;
-      font-weight: 680;
-      color: rgba(242,242,251,.92);
-    }
-    .btn.disabled{
-      opacity:.55;
-      pointer-events:none;
-      filter: grayscale(.2);
+      background: var(--bg);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .steps{
-      margin: 10px 0 0 18px;
-      color: var(--muted);
-      line-height:1.6;
-      font-size: 14px;
+    /* === BACKGROUND ATMOSPHERE === */
+    .atmosphere {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .atmosphere::before {
+      content: "";
+      position: absolute;
+      width: 800px; height: 800px;
+      top: -300px; left: -200px;
+      background: radial-gradient(circle, rgba(0,255,157,.06) 0%, transparent 70%);
+      animation: drift1 20s ease-in-out infinite;
+    }
+    .atmosphere::after {
+      content: "";
+      position: absolute;
+      width: 600px; height: 600px;
+      bottom: -200px; right: -100px;
+      background: radial-gradient(circle, rgba(124,92,255,.05) 0%, transparent 70%);
+      animation: drift2 25s ease-in-out infinite;
+    }
+    @keyframes drift1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(80px, 40px) scale(1.1); }
+      66% { transform: translate(-40px, 80px) scale(0.95); }
+    }
+    @keyframes drift2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-60px, -40px) scale(1.08); }
     }
 
-    .kv{
-      display:grid;
-      grid-template-columns: 120px 1fr;
-      gap: 10px;
-      margin-top: 10px;
-      align-items:start;
-    }
-    .k{ color: rgba(242,242,251,.65); font-size: 13px; }
-    .v{ color: rgba(242,242,251,.92); font-size: 14px; }
-
-    .small{
-      margin-top: 12px;
-      font-size: 12px;
-      color: rgba(242,242,251,.62);
-      line-height:1.4;
+    /* grid overlay */
+    .grid-bg {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      opacity: .025;
+      background-image:
+        linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
     }
 
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.04);
-      font-size: 12px;
-      color: rgba(242,242,251,.82);
-    }
-    .badgeDot{ width:8px; height:8px; border-radius:50%; background: var(--warn); }
-
-    .footer{
-      margin-top: 14px;
-      display:flex;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      gap:10px;
-      color: rgba(242,242,251,.50);
-      font-size: 12px;
-    }
-    .link{
-      color: rgba(242,242,251,.72);
-      text-decoration: none;
-      border-bottom: 1px dashed rgba(242,242,251,.25);
-    }
-    .link:hover{ color: rgba(242,242,251,.92); border-bottom-color: rgba(242,242,251,.45); }
-
-    /* Bottom decoration */
-    .decor{
-      margin-top: 18px;
-      padding: 14px 18px;
-      border-radius: var(--radius);
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      box-shadow: 0 14px 40px rgba(0,0,0,.25);
-      overflow:hidden;
-      position:relative;
-    }
-    .decor::before{
-      content:"";
-      position:absolute; inset:-30%;
-      background: conic-gradient(from 180deg,
-        rgba(255,45,85,.0),
-        rgba(255,45,85,.18),
-        rgba(139,92,246,.14),
-        rgba(34,211,238,.12),
-        rgba(255,45,85,.0)
+    /* scan line effect */
+    .scanline {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: .018;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,.08) 2px,
+        rgba(255,255,255,.08) 4px
       );
-      animation: spin 14s linear infinite;
-      opacity:.55;
     }
-    .decorInner{
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      z-index:1;
+
+    /* === LAYOUT === */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
     }
-    .sig{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
+
+    /* === HEADER === */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 40px;
+      animation: fadeUp .6s ease both;
     }
-    .sigTitle{
-      font-weight: 800;
-      letter-spacing:.3px;
-      font-size: 13px;
-      opacity:.92;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
-    .sigSub{
-      font-size: 12px;
-      color: rgba(242,242,251,.66);
-      line-height:1.35;
-    }
-    .sparkline{
-      width: 220px;
-      max-width: 42vw;
-      height: 42px;
+
+    .logo-mark {
+      width: 48px; height: 48px;
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      overflow:hidden;
-      position:relative;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      overflow: hidden;
     }
-    .sparkline svg{
-      width:100%; height:100%;
-      display:block;
-      opacity:.95;
+    .logo-mark::before {
+      content: "";
+      position: absolute;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      filter: blur(12px);
+      opacity: .4;
+      animation: logoPulse 3s ease-in-out infinite;
     }
-    .sparkGlow{
-      position:absolute; inset:0;
-      background: radial-gradient(120px 60px at 20% 50%, rgba(56,242,155,.18), transparent 65%);
-      opacity:.0;
-      transition: opacity .25s ease;
-      pointer-events:none;
+    .logo-mark::after {
+      content: "⬡";
+      font-size: 22px;
+      color: var(--text);
+      opacity: .9;
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes logoPulse {
+      0%, 100% { opacity: .3; transform: scale(.8); }
+      50% { opacity: .6; transform: scale(1.2); }
+    }
+
+    .brand-text h1 {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: lowercase;
+    }
+    .brand-text h1 span {
+      color: var(--accent);
+    }
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      letter-spacing: .5px;
+      margin-top: 2px;
+    }
+
+    /* Status indicator */
+    .status-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .5px;
+      color: var(--text-mid);
+      transition: all .3s ease;
+      user-select: none;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      transition: all .3s ease;
+      position: relative;
+    }
+    .status-dot::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      opacity: 0;
+      animation: none;
+    }
+
+    .status-chip.online {
+      border-color: var(--green-mid);
+      background: var(--green-dim);
+      color: var(--green);
+    }
+    .status-chip.online .status-dot {
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(0,255,157,.4);
+    }
+    .status-chip.online .status-dot::after {
+      border-color: var(--green);
+      animation: ringPulse 2s ease-in-out infinite;
+      opacity: 1;
+    }
+
+    .status-chip.offline {
+      border-color: var(--red-mid);
+      background: var(--red-dim);
+      color: var(--red);
+    }
+    .status-chip.offline .status-dot {
+      background: var(--red);
+      box-shadow: 0 0 12px rgba(255,51,102,.4);
+    }
+    .status-chip.offline .status-dot::after {
+      border-color: var(--red);
+      animation: ringPulse 1.4s ease-in-out infinite;
+      opacity: 1;
+    }
+
+    @keyframes ringPulse {
+      0% { transform: scale(1); opacity: .6; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    /* === BENTO GRID === */
+    .bento {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      animation: fadeUp .6s ease .15s both;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .25s ease, background .25s ease;
+    }
+    .card:hover {
+      border-color: var(--border-bright);
+      background: var(--surface-hover);
+    }
+
+    /* subtle top-edge glow on cards */
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+    }
+
+    .card.full { grid-column: 1 / -1; }
+    .card.accent-green::after {
+      content: "";
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, var(--green-dim) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .card.accent-purple::after {
+      content: "";
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(124,92,255,.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+    .card-label .icon {
+      font-size: 14px;
+      opacity: .6;
+    }
+
+    .card h2 {
+      font-family: var(--sans);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -.3px;
+    }
+
+    .card-desc {
+      color: var(--text-dim);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* === BUTTONS === */
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .3px;
+      color: var(--bg);
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      transition: all .15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+      opacity: 0;
+      transition: opacity .15s ease;
+    }
+    .btn:hover::before { opacity: 1; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,255,157,.2); }
+    .btn:active { transform: translateY(0); }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--text-mid);
+      border: 1px solid var(--border-bright);
+    }
+    .btn.ghost:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      box-shadow: none;
+      border-color: rgba(255,255,255,.2);
+    }
+    .btn.ghost::before { display: none; }
+
+    .btn.disabled {
+      opacity: .3;
+      pointer-events: none;
+      filter: grayscale(.5);
+    }
+
+    /* === STEPS === */
+    .steps-list {
+      list-style: none;
+      counter-reset: step;
+      margin-top: 20px;
+    }
+    .steps-list li {
+      counter-increment: step;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.5;
+    }
+    .steps-list li:last-child { border-bottom: none; }
+    .steps-list li::before {
+      content: counter(step, decimal-leading-zero);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      opacity: .7;
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: var(--green-dim);
+      margin-top: 1px;
+    }
+
+    .code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    /* === HEALTH PANEL === */
+    .health-grid {
+      display: grid;
+      gap: 0;
+      margin-top: 4px;
+    }
+    .health-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .health-row:last-child { border-bottom: none; }
+    .health-key {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .health-val {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-badge.up {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid var(--green-mid);
+    }
+    .status-badge.down {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid var(--red-mid);
+    }
+
+    .hint-text {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      padding: 10px 14px;
+      background: rgba(255,255,255,.02);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--border-bright);
+      line-height: 1.5;
+    }
+
+    .card-footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .json-link {
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: all .2s ease;
+    }
+    .json-link:hover {
+      color: var(--text);
+      border-color: var(--border-bright);
+      background: var(--surface-hover);
+    }
+
+    /* === FOOTER === */
+    .site-footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: .5px;
+      animation: fadeUp .6s ease .3s both;
+    }
+    .site-footer a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color .2s ease;
+    }
+    .site-footer a:hover { color: var(--accent); }
+
+    /* === ANIMATIONS === */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 700px) {
+      .container { padding: 24px 14px 40px; }
+      .header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .bento { grid-template-columns: 1fr; }
+      .card.full { grid-column: 1; }
+      .card { padding: 22px; }
+      .card h2 { font-size: 19px; }
+      .brand-text h1 { font-size: 17px; }
+      .actions { flex-direction: column; }
+      .btn { justify-content: center; }
+      .site-footer { flex-direction: column; gap: 8px; text-align: center; }
     }
   </style>
 </head>
 
 <body>
-  <div class="bg"></div>
-  <div class="noise"></div>
-  <div class="shine"></div>
+  <div class="atmosphere"></div>
+  <div class="grid-bg"></div>
+  <div class="scanline"></div>
 
-  <div class="wrap">
-    <div class="top">
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>corewatcher</h1>
-          <div class="subtitle">Private homelab portal · Tailnet access</div>
+        <div class="logo-mark"></div>
+        <div class="brand-text">
+          <h1>core<span>watcher</span></h1>
+          <div class="brand-sub">private homelab · tailnet only</div>
         </div>
       </div>
 
-      <div class="pill" id="healthPill" title="Updated by the server. If updates stop, assume it's down.">
-        <span class="dot" id="healthDot"></span>
-        <span class="pillText" id="healthText">Checking server…</span>
+      <div class="status-chip" id="healthChip">
+        <span class="status-dot" id="healthDot"></span>
+        <span id="healthText">checking…</span>
       </div>
-    </div>
+    </header>
 
-    <div class="grid">
-      <section class="card">
-        <h2>Access</h2>
-        <p class="muted">
-          This homelab is private. You need Tailscale to reach internal services.
+    <!-- BENTO GRID -->
+    <div class="bento">
+
+      <!-- ACCESS CARD -->
+      <div class="card accent-green">
+        <div class="card-label"><span class="icon">◈</span> access</div>
+        <h2>Connect to the lab</h2>
+        <p class="card-desc">
+          All services are private and routed through Tailscale.
+          Connect to the tailnet to reach the control center and internal apps.
         </p>
 
-        <div class="btnRow">
+        <div class="actions">
           <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">
-            Connect via Tailscale →
+            Tailscale login ↗
           </a>
-
-          <a class="btn secondary" id="homeBtn" href="https://home.corewatcher.com" target="_blank" rel="noopener">
-            Open Control Center (Homarr)
+          <a class="btn ghost" id="homeBtn" href="https://home.corewatcher.com" target="_blank" rel="noopener">
+            Control center
           </a>
-
-          <a class="btn secondary" href="https://tailscale.com/download" target="_blank" rel="noopener">
-            Download Tailscale
+          <a class="btn ghost" href="https://tailscale.com/download" target="_blank" rel="noopener">
+            Download client
           </a>
         </div>
+      </div>
 
-        <div style="height:14px"></div>
-
-        <span class="badge">
-          <span class="badgeDot" id="badgeDot"></span>
-          Quick steps
-        </span>
-
-        <ol class="steps">
-          <li>Install Tailscale on your device.</li>
-          <li>Sign in on <span class="kbd">login.tailscale.com</span>.</li>
-          <li>Turn Tailscale “On”.</li>
-          <li>Open <span class="kbd">home.corewatcher.com</span> to confirm access.</li>
-        </ol>
-
-        <div class="small">
-          The Control Center is reachable only when connected to the Tailnet.
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Server health</h2>
-        <p class="muted" style="margin-bottom:10px">
-          Updated by the server itself. If updates stop, assume it’s down.
+      <!-- HEALTH CARD -->
+      <div class="card accent-purple">
+        <div class="card-label"><span class="icon">◉</span> server health</div>
+        <h2>Live status</h2>
+        <p class="card-desc">
+          Auto-updated by the server. If updates stop, assume it's unreachable.
         </p>
 
-        <div class="kv">
-          <div class="k">Status</div><div class="v" id="statusLine">—</div>
-          <div class="k">Last seen</div><div class="v" id="lastSeen">—</div>
-          <div class="k">Message</div><div class="v" id="message">—</div>
-        </div>
-
-        <div class="small" id="hint"></div>
-
-        <div class="footer">
-          <div id="ageLine">—</div>
-          <div>
-            <a class="link" href="./health.json" target="_blank" rel="noopener">health.json</a>
+        <div class="health-grid">
+          <div class="health-row">
+            <span class="health-key">Status</span>
+            <span class="health-val" id="statusLine">—</span>
+          </div>
+          <div class="health-row">
+            <span class="health-key">Last seen</span>
+            <span class="health-val" id="lastSeen">—</span>
+          </div>
+          <div class="health-row">
+            <span class="health-key">Message</span>
+            <span class="health-val" id="message">—</span>
           </div>
         </div>
-      </section>
-    </div>
 
-    <!-- Bottom decoration -->
-    <section class="decor" aria-hidden="true">
-      <div class="decorInner">
-        <div class="sig">
-          <div class="sigTitle">corewatcher signal</div>
-          <div class="sigSub">a tiny heartbeat from the void — updated every few minutes.</div>
-        </div>
+        <div class="hint-text" id="hint"></div>
 
-        <div class="sparkline">
-          <div class="sparkGlow" id="sparkGlow"></div>
-          <!-- cute little waveform (static, but we change glow based on status) -->
-          <svg viewBox="0 0 220 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 26 C18 26 18 10 36 10 C54 10 54 34 72 34 C90 34 90 16 108 16 C126 16 126 30 144 30 C162 30 162 8 180 8 C198 8 198 26 220 26"
-              stroke="rgba(242,242,251,.70)" stroke-width="2.2" />
-            <path d="M0 26 C18 26 18 10 36 10 C54 10 54 34 72 34 C90 34 90 16 108 16 C126 16 126 30 144 30 C162 30 162 8 180 8 C198 8 198 26 220 26"
-              stroke="rgba(255,45,85,.55)" stroke-width="1.2" />
-          </svg>
+        <div class="card-footer">
+          <span id="ageLine">—</span>
+          <a class="json-link" href="./health.json" target="_blank" rel="noopener">health.json</a>
         </div>
       </div>
-    </section>
+
+      <!-- SETUP STEPS CARD (full width) -->
+      <div class="card full">
+        <div class="card-label"><span class="icon">▹</span> quick setup</div>
+        <h2>Get connected in 4 steps</h2>
+
+        <ol class="steps-list">
+          <li>Install <strong>Tailscale</strong> on your device — available for all major platforms.</li>
+          <li>Sign in at <span class="code">login.tailscale.com</span> with your authorized account.</li>
+          <li>Toggle Tailscale <strong>"On"</strong> to join the tailnet.</li>
+          <li>Open <span class="code">home.corewatcher.com</span> to verify access to the control center.</li>
+        </ol>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <span>corewatcher · homelab portal</span>
+      <span>tailscale-gated · <a href="./health.json">status feed</a></span>
+    </footer>
+
   </div>
 
 <script>
-  const HEALTH_URL = "./health.json?cachebust=" + Date.now();
-  const STALE_MINUTES = 6; // if last_seen older than this => offline
+  const HEALTH_URL = "./health.json?t=" + Date.now();
+  const STALE_MINUTES = 6;
 
-  const el = (id) => document.getElementById(id);
+  const el = id => document.getElementById(id);
 
-  function setStatus(state, text){
-    const dot = el("healthDot");
-    const badgeDot = el("badgeDot");
-    const pill = el("healthPill");
-    const sparkGlow = el("sparkGlow");
+  function setStatus(state, text) {
+    const chip = el("healthChip");
     const homeBtn = el("homeBtn");
 
     el("healthText").textContent = text;
+    chip.className = "status-chip";
 
-    dot.classList.remove("pulse-good","pulse-bad");
-
-    if(state === "up"){
-      dot.style.background = "var(--good)";
-      badgeDot.style.background = "var(--good)";
-      pill.style.borderColor = "rgba(56,242,155,.35)";
-      dot.classList.add("pulse-good");
-      if (sparkGlow) sparkGlow.style.opacity = "1";
-      if (homeBtn) homeBtn.classList.remove("disabled");
-    } else if(state === "down"){
-      dot.style.background = "var(--bad)";
-      badgeDot.style.background = "var(--bad)";
-      pill.style.borderColor = "rgba(255,77,109,.35)";
-      dot.classList.add("pulse-bad");
-      if (sparkGlow) sparkGlow.style.opacity = ".10";
-      // purely UX: disable the button when server is down (still viewable in source, ofc)
-      if (homeBtn) homeBtn.classList.add("disabled");
-    } else {
-      dot.style.background = "var(--warn)";
-      badgeDot.style.background = "var(--warn)";
-      pill.style.borderColor = "rgba(255,209,102,.35)";
-      if (sparkGlow) sparkGlow.style.opacity = ".35";
-      if (homeBtn) homeBtn.classList.remove("disabled");
+    if (state === "up") {
+      chip.classList.add("online");
+      homeBtn && homeBtn.classList.remove("disabled");
+    } else if (state === "down") {
+      chip.classList.add("offline");
+      homeBtn && homeBtn.classList.add("disabled");
     }
   }
 
-  function fmt(ts){
+  function fmt(ts) {
     try { return new Date(ts).toLocaleString(); } catch { return ts; }
   }
 
-  function minutesAgo(ts){
-    try{
-      const ms = Date.now() - new Date(ts).getTime();
-      return Math.max(0, Math.floor(ms / 60000));
-    } catch {
-      return null;
-    }
+  function minutesAgo(ts) {
+    try {
+      return Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000));
+    } catch { return null; }
   }
 
-  async function loadHealth(){
-    try{
+  async function loadHealth() {
+    try {
       const res = await fetch(HEALTH_URL, { cache: "no-store" });
-      if(!res.ok) throw new Error("health.json not ok");
+      if (!res.ok) throw new Error("fetch failed");
       const data = await res.json();
 
-      const lastSeen = data.last_seen ? fmt(data.last_seen) : "—";
-      el("lastSeen").textContent = lastSeen;
+      el("lastSeen").textContent = data.last_seen ? fmt(data.last_seen) : "—";
       el("message").textContent = data.message || "—";
 
-      // stale logic
-      let stale = true;
-      let ageMins = null;
-      if(data.last_seen){
+      let stale = true, ageMins = null;
+      if (data.last_seen) {
         ageMins = minutesAgo(data.last_seen);
-        stale = ageMins === null ? true : (ageMins > STALE_MINUTES);
+        stale = ageMins === null ? true : ageMins > STALE_MINUTES;
       }
 
-      const serverUp = (data.server === "up") && !stale;
+      const up = data.server === "up" && !stale;
 
-      el("statusLine").textContent = serverUp ? "Online ✅" : "Offline ❌";
+      el("statusLine").innerHTML = up
+        ? '<span class="status-badge up">● online</span>'
+        : '<span class="status-badge down">● offline</span>';
 
-      if(serverUp){
-        setStatus("up","Server online");
-        el("hint").textContent = "If you still can’t reach the Control Center: connect Tailscale.";
+      if (up) {
+        setStatus("up", "server online");
+        el("hint").textContent = "Can't reach control center? Make sure Tailscale is connected.";
       } else {
-        setStatus("down","Server offline / unreachable");
-        el("hint").textContent = "If you expected it to be up: check power, internet, Docker, or maintenance.";
+        setStatus("down", "server offline");
+        el("hint").textContent = "Server unreachable — check power, network, Docker, or scheduled maintenance.";
       }
 
-      if(ageMins === null){
-        el("ageLine").textContent = "Last update: unknown";
-      } else {
-        el("ageLine").textContent = `Last update: ${ageMins} min ago`;
-      }
+      el("ageLine").textContent = ageMins === null
+        ? "last update: unknown"
+        : `last update: ${ageMins} min ago`;
 
-    } catch (e){
-      setStatus("down","Server offline / unreachable");
-      el("statusLine").textContent = "Offline ❌";
+    } catch {
+      setStatus("down", "server offline");
+      el("statusLine").innerHTML = '<span class="status-badge down">● offline</span>';
       el("lastSeen").textContent = "—";
-      el("message").textContent = "No health data available.";
-      el("hint").textContent = "Health feed missing. Ensure health.json exists and is reachable.";
-      el("ageLine").textContent = "Last update: —";
+      el("message").textContent = "no health data available";
+      el("hint").textContent = "Health feed missing — ensure health.json exists and is reachable.";
+      el("ageLine").textContent = "last update: —";
     }
   }
 
