@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>corewatcher</title>
   <meta name="theme-color" content="#050508" />
-  <meta name="description" content="corewatcher portal — private homelab access via Tailscale + live server heartbeat." />
+  <meta name="description" content="corewatcher portal — authorized access and live service status." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -51,7 +51,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* === BACKGROUND === */
     .atmosphere {
       position: fixed; inset: 0;
       pointer-events: none; z-index: 0;
@@ -105,7 +104,6 @@
       background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.08) 2px, rgba(255,255,255,.08) 4px);
     }
 
-    /* === LAYOUT === */
     .container {
       position: relative; z-index: 1;
       max-width: 1000px;
@@ -113,7 +111,6 @@
       padding: 40px 20px 60px;
     }
 
-    /* === HEADER === */
     .header {
       display: flex;
       align-items: center;
@@ -187,7 +184,6 @@
       margin-top: 2px;
     }
 
-    /* Status chip */
     .status-chip {
       display: flex;
       align-items: center;
@@ -254,7 +250,6 @@
       100% { transform: scale(2.5); opacity: 0; }
     }
 
-    /* === BENTO GRID === */
     .bento {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -330,7 +325,6 @@
       margin-bottom: 20px;
     }
 
-    /* === BUTTONS === */
     .actions { display: flex; flex-wrap: wrap; gap: 10px; }
     .btn {
       display: inline-flex;
@@ -376,7 +370,6 @@
     .btn.ghost::before { display: none; }
     .btn.disabled { opacity: .3; pointer-events: none; filter: grayscale(.5); }
 
-    /* === STEPS (FIXED) === */
     .steps-list {
       list-style: none;
       counter-reset: step;
@@ -425,7 +418,6 @@
       .code { white-space: normal; word-break: break-all; }
     }
 
-    /* === HEALTH PANEL === */
     .health-grid { display: grid; gap: 0; margin-top: 4px; }
     .health-row {
       display: flex;
@@ -512,7 +504,6 @@
       background: var(--surface-hover);
     }
 
-    /* === TERMINAL EASTER EGG === */
     .terminal-overlay {
       position: fixed; inset: 0;
       z-index: 10000;
@@ -626,7 +617,6 @@
       padding: 0;
     }
 
-    /* === FOOTER === */
     .site-footer {
       margin-top: 40px;
       padding-top: 20px;
@@ -695,7 +685,7 @@
         <div class="logo-mark" id="logoBtn" title="click me :)"></div>
         <div class="brand-text">
           <h1>core<span>watcher</span></h1>
-          <div class="brand-sub">private homelab · tailnet only</div>
+          <div class="brand-sub">secure portal · authorized access</div>
         </div>
       </div>
       <div class="status-chip" id="healthChip">
@@ -708,14 +698,13 @@
 
       <div class="card accent-green">
         <div class="card-label"><span class="icon">◈</span> access</div>
-        <h2>Connect to the lab</h2>
+        <h2>Authorized access</h2>
         <p class="card-desc">
-          All services are private and routed through Tailscale.
-          Connect to the tailnet to reach the control center and internal apps.
+          Access to protected services is limited to approved devices and authorized users.
+          Sign in with your account and use the required access client to continue.
         </p>
         <div class="actions">
-          <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">Tailscale login ↗</a>
-          <a class="btn ghost" id="homeBtn" href="https://home.corewatcher.com" target="_blank" rel="noopener">Control center</a>
+          <a class="btn" href="https://login.tailscale.com/" target="_blank" rel="noopener">Sign in ↗</a>
           <a class="btn ghost" href="https://tailscale.com/download" target="_blank" rel="noopener">Download client</a>
         </div>
       </div>
@@ -749,23 +738,22 @@
         <div class="card-label"><span class="icon">▹</span> quick setup</div>
         <h2>Get connected in 4 steps</h2>
         <ol class="steps-list">
-          <li>Install <strong>Tailscale</strong> on your device — available for all major platforms.</li>
-          <li>Sign in at <span class="code">login.tailscale.com</span> with your authorized account.</li>
-          <li>Toggle Tailscale <strong>"On"</strong> to join the tailnet.</li>
-          <li>Open <span class="code">home.corewatcher.com</span> to verify access to the control center.</li>
+          <li>Install the required access client on your device.</li>
+          <li>Sign in with your authorized account.</li>
+          <li>Make sure the secure connection is active.</li>
+          <li>Open the internal portal or app you were given access to.</li>
         </ol>
       </div>
 
     </div>
 
     <footer class="site-footer">
-      <span>corewatcher · homelab portal</span>
-      <span>tailscale-gated · <a href="./health.json">status feed</a></span>
+      <span>corewatcher · secure portal</span>
+      <span>service status · <a href="./health.json">status feed</a></span>
     </footer>
     <div class="easter-hint">try clicking the logo</div>
   </div>
 
-  <!-- TERMINAL -->
   <div class="terminal-overlay" id="termOverlay">
     <div class="terminal">
       <div class="terminal-bar">
@@ -780,18 +768,16 @@
   </div>
 
 <script>
-  /* ======================== HEALTH CHECK ======================== */
   const HEALTH_URL = "./health.json?t=" + Date.now();
   const STALE_MINUTES = 6;
   const el = id => document.getElementById(id);
 
   function setStatus(state, text) {
     const chip = el("healthChip");
-    const homeBtn = el("homeBtn");
     el("healthText").textContent = text;
     chip.className = "status-chip";
-    if (state === "up") { chip.classList.add("online"); homeBtn && homeBtn.classList.remove("disabled"); }
-    else if (state === "down") { chip.classList.add("offline"); homeBtn && homeBtn.classList.add("disabled"); }
+    if (state === "up") chip.classList.add("online");
+    else if (state === "down") chip.classList.add("offline");
   }
 
   function fmt(ts) { try { return new Date(ts).toLocaleString(); } catch { return ts; } }
@@ -808,8 +794,8 @@
       if (data.last_seen) { ageMins = minutesAgo(data.last_seen); stale = ageMins === null ? true : ageMins > STALE_MINUTES; }
       const up = data.server === "up" && !stale;
       el("statusLine").innerHTML = up ? '<span class="status-badge up">● online</span>' : '<span class="status-badge down">● offline</span>';
-      if (up) { setStatus("up", "server online"); el("hint").textContent = "Can't reach control center? Make sure Tailscale is connected."; }
-      else { setStatus("down", "server offline"); el("hint").textContent = "Server unreachable — check power, network, Docker, or scheduled maintenance."; }
+      if (up) { setStatus("up", "server online"); el("hint").textContent = "Service is responding normally."; }
+      else { setStatus("down", "server offline"); el("hint").textContent = "Service is currently unavailable or not reporting."; }
       el("ageLine").textContent = ageMins === null ? "last update: unknown" : `last update: ${ageMins} min ago`;
     } catch {
       setStatus("down", "server offline");
@@ -822,7 +808,6 @@
   }
   loadHealth();
 
-  /* ======================== PARTICLES ======================== */
   (() => {
     const canvas = document.getElementById("particles");
     const ctx = canvas.getContext("2d");
@@ -862,7 +847,6 @@
     draw();
   })();
 
-  /* ======================== TERMINAL ======================== */
   (() => {
     const overlay = el("termOverlay");
     const body = el("termBody");
@@ -942,12 +926,11 @@
       },
       about: () => [
         { t: "corewatcher", c: "green bold" },
-        { t: "a private homelab portal." },
-        { t: "self-hosted, dockerized, and tailscale-gated." },
+        { t: "a secure access and status portal." },
+        { t: "clean, private, and intentionally minimal." },
         { t: "" },
-        { t: "domain: corewatcher.com", c: "dim" },
-        { t: "access: tailscale VPN only", c: "dim" },
-        { t: "stack:  linux · docker · caddy · cloudflare", c: "dim" },
+        { t: "status feed: public", c: "dim" },
+        { t: "protected services: restricted", c: "dim" },
         { t: "" },
       ],
       quote: () => [{ t: "" }, { t: QUOTES[Math.floor(Math.random() * QUOTES.length)], c: "purple" }, { t: "" }],
@@ -978,9 +961,9 @@
       traceroute: () => {
         const lines = [{ t: "traceroute to corewatcher.local, 8 hops max", c: "dim" }];
         const hops = [
-          "gateway.local", "isp-edge-01.net", "core-rtr-zh.backbone.net",
-          "ix-zurich-01.peering.net", "cdn-edge.cloudflare.com",
-          "tailscale-relay.ts.net", "mesh-node.tailnet.internal", "corewatcher.local"
+          "uplink.local", "edge-node", "core-route-01",
+          "transit-hop", "relay-edge",
+          "mesh-link", "internal-node", "corewatcher.local"
         ];
         for (let i = 0; i < hops.length; i++) {
           const ms = (Math.random() * 15 + i * 2).toFixed(2);
@@ -1078,7 +1061,7 @@
         }
         lines.push({ t: "" });
         lines.push({ t: "  ACCESS GRANTED", c: "green bold" });
-        lines.push({ t: "  just kidding. you're already on the tailnet.", c: "dim" });
+        lines.push({ t: "  just kidding. nothing to see here.", c: "dim" });
         lines.push({ t: "" });
         return lines;
       },
@@ -1089,7 +1072,6 @@
       exit: () => "EXIT",
     };
 
-    /* cowsay is special — takes arguments */
     function cowsay(msg) {
       if (!msg) msg = "moo";
       const top = " " + "_".repeat(msg.length + 2);
@@ -1145,7 +1127,6 @@
 
       if (!val) { prompt(); return; }
 
-      /* cowsay with arguments */
       if (val.startsWith("cowsay")) {
         const msg = raw.slice(6).trim();
         addLines(cowsay(msg));
@@ -1153,14 +1134,12 @@
         return;
       }
 
-      /* sudo easter egg */
       if (val.startsWith("sudo")) {
         addLines([{ t: "nice try. you're not root here.", c: "red" }]);
         prompt();
         return;
       }
 
-      /* rm -rf easter egg */
       if (val.includes("rm -rf") || val.includes("rm -fr")) {
         addLines([
           { t: "" },
@@ -1177,7 +1156,7 @@
         const r = fn();
         if (r === "CLEAR") { body.innerHTML = ""; prompt(); return; }
         if (r === "EXIT") { closeTerm(); return; }
-        if (r === "GAME") return; /* game handles its own prompt */
+        if (r === "GAME") return;
         addLines(r);
       } else {
         addLines([{ t: `command not found: ${val}. try 'help'.`, c: "red" }]);
@@ -1193,7 +1172,6 @@
     overlay.addEventListener("click", e => { if (e.target === overlay) closeTerm(); });
     document.addEventListener("keydown", e => { if (e.key === "Escape" && overlay.classList.contains("open")) closeTerm(); });
 
-    /* ======================== PONG ======================== */
     function startPong() {
       gameActive = true;
       addLines([
@@ -1224,24 +1202,19 @@
       document.addEventListener("keyup", keyUp);
 
       function tick() {
-        /* player input */
         if (keys['w'] || keys['ArrowUp']) p1y = Math.max(0, p1y - 4);
         if (keys['s'] || keys['ArrowDown']) p1y = Math.min(H - PAD_H, p1y + 4);
 
-        /* quit */
         if (keys['q']) { endPong("you quit. gg."); return; }
 
-        /* AI */
         const aiCenter = p2y + PAD_H / 2;
         if (aiCenter < by - 10) p2y += 2.8;
         else if (aiCenter > by + 10) p2y -= 2.8;
         p2y = Math.max(0, Math.min(H - PAD_H, p2y));
 
-        /* ball */
         bx += bdx; by += bdy;
         if (by <= BALL || by >= H - BALL) bdy *= -1;
 
-        /* paddle collision */
         if (bx - BALL <= PAD_W + 12 && by >= p1y && by <= p1y + PAD_H && bdx < 0) {
           bdx = Math.abs(bdx) * 1.05;
           bdy += (by - (p1y + PAD_H/2)) * 0.1;
@@ -1251,24 +1224,19 @@
           bdy += (by - (p2y + PAD_H/2)) * 0.1;
         }
 
-        /* speed cap */
         bdx = Math.max(-8, Math.min(8, bdx));
         bdy = Math.max(-6, Math.min(6, bdy));
 
-        /* score */
         if (bx < 0) { s2++; resetBall(); }
         if (bx > W) { s1++; resetBall(); }
 
-        /* draw */
         gc.fillStyle = "#0a0a10"; gc.fillRect(0, 0, W, H);
 
-        /* center line */
         gc.setLineDash([4, 6]);
         gc.strokeStyle = "rgba(255,255,255,.08)";
         gc.beginPath(); gc.moveTo(W/2, 0); gc.lineTo(W/2, H); gc.stroke();
         gc.setLineDash([]);
 
-        /* paddles */
         gc.fillStyle = "#00ff9d";
         gc.shadowColor = "#00ff9d"; gc.shadowBlur = 10;
         gc.fillRect(10, p1y, PAD_W, PAD_H);
@@ -1277,13 +1245,11 @@
         gc.fillRect(W - 10 - PAD_W, p2y, PAD_W, PAD_H);
         gc.shadowBlur = 0;
 
-        /* ball */
         gc.fillStyle = "#fff";
         gc.shadowColor = "#fff"; gc.shadowBlur = 8;
         gc.beginPath(); gc.arc(bx, by, BALL, 0, Math.PI*2); gc.fill();
         gc.shadowBlur = 0;
 
-        /* scores */
         gc.font = "bold 28px 'JetBrains Mono', monospace";
         gc.fillStyle = "rgba(0,255,157,.4)"; gc.textAlign = "center";
         gc.fillText(s1, W/2 - 40, 38);
@@ -1315,7 +1281,6 @@
       pongAnim = requestAnimationFrame(tick);
     }
 
-    /* ======================== SNAKE ======================== */
     function startSnake() {
       gameActive = true;
       addLines([
@@ -1374,13 +1339,11 @@
 
         const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
 
-        /* wall wrap */
         if (head.x < 0) head.x = COLS - 1;
         if (head.x >= COLS) head.x = 0;
         if (head.y < 0) head.y = ROWS - 1;
         if (head.y >= ROWS) head.y = 0;
 
-        /* self collision */
         if (snake.some(s => s.x === head.x && s.y === head.y)) { alive = false; endSnake(); return; }
 
         snake.unshift(head);
@@ -1398,13 +1361,11 @@
       function draw() {
         gc.fillStyle = "#0a0a10"; gc.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 
-        /* grid dots */
         gc.fillStyle = "rgba(255,255,255,.03)";
         for (let x = 0; x < COLS; x++) for (let y = 0; y < ROWS; y++) {
           gc.fillRect(x * CELL + CELL/2, y * CELL + CELL/2, 1, 1);
         }
 
-        /* food */
         gc.fillStyle = "#ff3366";
         gc.shadowColor = "#ff3366"; gc.shadowBlur = 8;
         gc.beginPath();
@@ -1412,7 +1373,6 @@
         gc.fill();
         gc.shadowBlur = 0;
 
-        /* snake */
         for (let i = 0; i < snake.length; i++) {
           const s = snake[i];
           const alpha = 1 - (i / snake.length) * .5;
@@ -1422,7 +1382,6 @@
           gc.shadowBlur = 0;
         }
 
-        /* score */
         gc.font = "bold 12px 'JetBrains Mono', monospace";
         gc.fillStyle = "rgba(255,255,255,.3)";
         gc.textAlign = "right";
@@ -1441,7 +1400,6 @@
       snakeAnim = requestAnimationFrame(tick);
     }
 
-    /* ======================== MATRIX RAIN ======================== */
     let mCanvas, mCtx, mAnim, mOn = false;
     const mChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF";
 
